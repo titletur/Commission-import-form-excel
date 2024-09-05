@@ -83,7 +83,7 @@
                             {{-- {{ $data['status'] == 1 ? 'Completed' : 'Pending' }} --}}
 
                             @if ($data['status'] == 1)
-                             Completed
+                             Completedss
                              <a href="{{ route('commissions.export', ['month' => $data['var_month'], 'show_month' =>$data['month'], 'year' => $data['var_year'], 'type' => 'excel']) }}" >
                              <img src="{{ asset('export.png') }}" width="20" height="20" alt="Export"> 
                              </a>
