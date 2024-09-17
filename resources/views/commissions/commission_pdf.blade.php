@@ -2,7 +2,6 @@
 <html>
 <head>
     {{-- <link rel="stylesheet" href="{{ asset('css/cssfont.css') }}"> --}}
-    <link rel="icon" href="{{ asset('bigc.jpg') }}" type="image/x-icon">
     <style>
         body {
             font-family: 'freeserif', sans-serif;
