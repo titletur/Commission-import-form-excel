@@ -53,6 +53,11 @@ class saleController extends Controller
     public function store(Request $request)
     {
         try {
+        
+        $request->merge([
+            'base_com' => $request->input('base_com') !== '' ? str_replace(',', '', $request->input('base_com')) : 0, 
+            'target' => $request->input('target') !== '' ? str_replace(',', '', $request->input('target')) : 0, 
+        ]);
         $request->validate([
             'code_sale' => 'required|string',
             'name_sale' => 'required|string',
@@ -87,6 +92,11 @@ class saleController extends Controller
     public function update(Request $request, $id_sale)
     {
         try {
+            
+        $request->merge([
+            'base_com' => $request->input('base_com') !== '' ? str_replace(',', '', $request->input('base_com')) : 0, 
+            'target' => $request->input('target') !== '' ? str_replace(',', '', $request->input('target')) : 0, 
+        ]);
         $request->validate([
             'code_sale' => 'required|string',
             'name_sale' => 'required|string',
