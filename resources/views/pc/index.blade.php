@@ -141,11 +141,11 @@
                         </div>
                         <div class="mb-3">
                             <label for="add_tarket" class="form-label">Target</label>
-                            <input type="text" class="form-control" id="add_tarket" name="tarket">
+                            <input type="text" class="form-control" id="add_tarket" name="tarket" value="0">
                         </div>
                         <div class="mb-3">
                             <label for="add_salary" class="form-label">Salary</label>
-                            <input type="text" class="form-control" id="add_salary" name="salary">
+                            <input type="text" class="form-control" id="add_salary" name="salary" value="0">
                         </div>
                     </div>
                     <div class="modal-footer">
