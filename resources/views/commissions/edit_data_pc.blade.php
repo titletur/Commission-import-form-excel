@@ -98,13 +98,23 @@
                             @foreach($pcs as $pc)
                                 @php
                                     // Query sale_qty for this product model and PC
+                                    // $pc_sale_qty = DB::table('tb_commission')
+                                    //                  ->where('store_id', $commission->store_id)
+                                    //                  ->where('pro_model', $commission->pro_model)
+                                    //                  ->where('id_pc', $pc->id)
+                                    //                  ->where('as_of_month', $var_month)
+                                    //                  ->where('as_of_year', $year)
+                                    //                  ->sum('sale_qty');
                                     $pc_sale_qty = DB::table('tb_commission')
-                                                     ->where('store_id', $commission->store_id)
-                                                     ->where('pro_model', $commission->pro_model)
-                                                     ->where('id_pc', $pc->id)
-                                                     ->where('as_of_month', $var_month)
-                                                     ->where('as_of_year', $year)
-                                                     ->sum('sale_qty');
+                                        ->join('tb_pc', 'tb_commission.id_pc', '=', 'tb_pc.id') // Join tb_pc on id_pc
+                                        ->where('tb_commission.store_id', $commission->store_id)
+                                        ->where('tb_commission.pro_model', $commission->pro_model)
+                                        ->where('tb_commission.id_pc', $pc->id)
+                                        ->where('tb_commission.as_of_month', $var_month)
+                                        ->where('tb_commission.as_of_year', $year)
+                                        ->whereNull('tb_pc.status_pc') // Where status_pc is null
+                                        ->sum('tb_commission.sale_qty');  // Sum sale_qty from tb_commission
+
                                 @endphp
                                 <td>
                                     <input type="number" name="pc_qty[{{ $commission->pro_model }}][{{ $pc->id }}]" value="{{ number_format($pc_sale_qty, 0) }}" class="sale-qty-input"/>
