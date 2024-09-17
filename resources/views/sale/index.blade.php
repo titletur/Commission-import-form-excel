@@ -108,11 +108,11 @@
                         </div>
                         <div class="mb-3">
                             <label for="add_target" class="form-label">Target</label>
-                            <input type="number" class="form-control" id="add_target" name="target">
+                            <input type="number" class="form-control" id="add_target" name="target" value="0">
                         </div>
                         <div class="mb-3">
                             <label for="add_base_com" class="form-label">Base Commission</label>
-                            <input type="number" class="form-control" id="add_base_com" name="base_com">
+                            <input type="number" class="form-control" id="add_base_com" name="base_com" value="0">
                         </div>
                         <div class="mb-3">
                             <label for="add_store_id" class="form-label">Storess</label>
