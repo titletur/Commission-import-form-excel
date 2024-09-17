@@ -129,7 +129,19 @@ class ImportController extends Controller
         $short_month = $request->input('short_month');
         
         $data = json_decode($request->input('data'), true);
+        Commission::where([
+            'as_of_month' => $var_month,
+            'as_of_year' => $var_year,
+        ])->delete();
+        Transaction::where([
+            'as_of_month' => $var_month,
+            'as_of_year' => $var_year,
+        ])->delete();
 
+        main_commission::where([
+            'as_of_month' => $var_month,
+            'as_of_year' => $var_year,
+        ])->delete();
         if (is_array($data)) {
             foreach ($data as $key => $row) {
                 
@@ -229,6 +241,7 @@ class ImportController extends Controller
                 $pcs = tb_pc::whereNull('status_pc')
                     ->where('store_id', $row['store_id'])
                     ->get();
+
 
                 // Calculate and Insert into tb_commission
                 if ($pcs->count() == 1) {
@@ -412,7 +425,8 @@ class ImportController extends Controller
                         } else {
                             $data->com_tv = 0;
                             $data->com_av = 0;
-                            $data->com_ha = 0;
+                            // $data->com_ha = 0;
+                            $data->com_ha = $data->normalcom_ha;
                         }
                         
                         switch ($pc->type_store) {
@@ -625,13 +639,13 @@ class ImportController extends Controller
                     ->where('as_of_month', $var_month)
                     ->where('as_of_year', $var_year)
                     ->sum('unit_ha');
-
+                    
+                    if ($sale->target > 0) {
+                        $achieve = ($totalSale * 100) / $sale->target;
+                    } else {
+                        $achieve = 0; // หรือค่าที่เหมาะสมอื่น ๆ ถ้า target เป็น 0
+                    }
                 // Calculate achieve and commission
-                if ($sale->target > 0) {
-                    $achieve = ($totalSale * 100) / $sale->target;
-                } else {
-                    $achieve = 0; // หรือค่าที่เหมาะสมอื่น ๆ ถ้า target เป็น 0
-                }
                 // $achieve = ($totalSale *100) / $sale->target ;
                 $comSale = ($sale->base_com * $achieve) / 100;
 
@@ -659,12 +673,13 @@ class ImportController extends Controller
                     ->where('as_of_year', $var_year)
                     ->where('type_pc', 'pc')
                     ->count();
-                // $avgSalePerPC = $totalSale_pc / $totalPCs;
-                if ($totalSale_pc > 0 && $totalPCs >0) {
-                    $avgSalePerPC = $totalSale_pc / $totalPCs;
-                }else{
-                    $avgSalePerPC =0;
-                }
+
+                    if ($totalSale_pc > 0 && $totalPCs >0) {
+                        $avgSalePerPC = $totalSale_pc / $totalPCs;
+                    }else{
+                        $avgSalePerPC =0;
+                    }
+
                 $extraAvg = 0;
                 if ($avgSalePerPC > 400000) $extraAvg = 8000;
                 elseif ($avgSalePerPC > 350000) $extraAvg = 6000;
