@@ -28,6 +28,11 @@ class pcController extends Controller
     public function store(Request $request)
     {
         try {
+        
+        $request->merge([
+            'tarket' => $request->input('tarket') !== '' ? str_replace(',', '', $request->input('tarket')) : 0, 
+            'salary' => $request->input('salary') !== '' ? str_replace(',', '', $request->input('salary')) : 0, 
+        ]);
         $request->validate([
             'store_id' => 'nullable|string',
             'type_store' => 'nullable|string',
@@ -65,6 +70,11 @@ class pcController extends Controller
     public function update(Request $request, $id)
     {
         try {
+        
+        $request->merge([
+            'tarket' => $request->input('tarket') !== '' ? str_replace(',', '', $request->input('tarket')) : 0, 
+            'salary' => $request->input('salary') !== '' ? str_replace(',', '', $request->input('salary')) : 0, 
+        ]);
         $request->validate([
             'store_id' => 'nullable|string',
             'type_store' => 'nullable|string',
