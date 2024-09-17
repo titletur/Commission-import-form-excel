@@ -513,21 +513,51 @@ class CommissionController extends Controller
 
                 foreach ($pc_qty_data as $pro_model => $pcs) {
                     foreach ($pcs as $id_pc => $qty) {
-                        Commission::updateOrCreate(
-                            [
-                                'store_id' => $store_id,
-                                'pro_model' => $pro_model,
-                                'id_pc' => $id_pc,
-                                'as_of_month' => $var_month,
-                                'as_of_year' => $year,
-                            ],
-                            [
-                                'sale_qty' => $qty,
-                            ]
-                        );
-                    
+                        $existingData = Commission::where('store_id', $store_id)
+                        ->where('pro_model', $pro_model)
+                        ->where('id_pc', $id_pc)
+                        ->where('as_of_month', $var_month)
+                        ->where('as_of_year', $year)
+                        ->first();
+                        if ($existingData) {
+                            Commission::updateOrCreate(
+                                [
+                                    'store_id' => $store_id,
+                                    'pro_model' => $pro_model,
+                                    'id_pc' => $id_pc,
+                                    'as_of_month' => $var_month,
+                                    'as_of_year' => $year,
+                                ],
+                                [
+                                    'sale_qty' => $qty,
+                                ]
+                            );
+                        } else {
                 
-            
+                            $pc_with_data = Commission::where('store_id', $store_id)
+                            ->where('pro_model', $pro_model)
+                            ->where('as_of_month', $var_month)
+                            ->where('as_of_year', $year)
+                            ->first(); // คัดลอกจาก PC แรกที่มีข้อมูล
+
+                            if ($pc_with_data) {
+                                Commission::create([
+                                    'suppliercode' => $pc_with_data->suppliercode,
+                                    'store_id' => $pc_with_data->store_id,
+                                    'type_store' => $pc_with_data->type_store,
+                                    'as_of_month' => $var_month,
+                                    'as_of_year' => $year,
+                                    'pro_model' => $pc_with_data->pro_model,
+                                    'type_product' => $pc_with_data->type_product,
+                                    'sale_amt' => $pc_with_data->sale_amt,
+                                    'sale_amt_vat' => $pc_with_data->sale_amt_vat,
+                                    'sale_qty' => $qty, // อัปเดตจำนวนตามที่กรอกใหม่
+                                    'id_pc' => $id_pc,
+                                    'type_pc' => $pc_with_data->type_pc,
+                                    'com' => $pc_with_data->com,
+                                ]);
+                            }
+                        }
     
             $salesData = DB::table('tb_commission')
                 ->select(
@@ -607,7 +637,8 @@ class CommissionController extends Controller
                             } else {
                                 $data->com_tv = 0;
                                 $data->com_av = 0;
-                                $data->com_ha = 0;
+                                // $data->com_ha = 0;
+                                $data->com_ha = $data->normalcom_ha;
                             }
                             
                             switch ($pc->type_store) {
