@@ -41,17 +41,21 @@
     
     @extends('layouts.nav_bar')
     @section('product', 'active')
-   
+    @php
+    $permissions = json_decode(Auth::user()->permissions, true); // แปลง JSON เป็น array
+    @endphp
     @section('content')
         <div align="center">
         <h1>Product List  &nbsp;
+        @if(in_array('Add_product', $permissions))
         <button class="btn btn-primary add-btn" data-bs-toggle="modal" data-bs-target="#addModal">Add product</button>
+        @endif
         </h1>
         </div>
         
 
         <div class="mb-6 text-right">
-            @if(Auth::user()->id === 1 || Auth::user()->permissions === 'adminacc')
+            @if(in_array('Switch_product', $permissions))
             <form action="{{ route('toggleEditMode') }}" method="POST" class="d-inline">
                 @csrf
                 <button type="submit" class="btn btn-info">
@@ -110,7 +114,7 @@
                         <td>{{ $product->price_vat }}</td>
                         <td>{{ $product->com }}</td>
                         <td>
-                            @if($editMode)
+                            @if($editMode && in_array('Edit_product', $permissions))
                             <button class="btn btn-warning edit-btn" 
                             data-id="{{ $product->id }}" data-suppliercode="{{ $product->suppliercode }}" 
                             data-division="{{ $product->division }}" data-department="{{ $product->department }}" 
@@ -121,6 +125,8 @@
                             data-type_product="{{ $product->type_product }}" data-price="{{ $product->price }}"
                             data-price_vat="{{ $product->price_vat }}" data-com="{{ $product->com }}">Edit</button>
                             &nbsp;
+                            @endif
+                            @if($editMode && in_array('Del_product', $permissions))
                             <button class="btn btn-danger delete-btn" data-id="{{ $product->id }}">Delete</button>
                             @endif
                         </td>
