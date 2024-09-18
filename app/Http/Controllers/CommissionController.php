@@ -428,7 +428,7 @@ class CommissionController extends Controller
         $commissions = Commission::select(
                                 'suppliercode',
                                 'store_id',
-                                'type_store',
+
                                 'pro_model',
                                 'type_product',
                                 'sale_amt',
@@ -438,7 +438,7 @@ class CommissionController extends Controller
                             ->where('store_id', $store_id)
                             ->where('as_of_month', $var_month)
                             ->where('as_of_year', $year)
-                            ->groupBy('pro_model', 'suppliercode', 'store_id', 'type_store', 'type_product','sale_amt','sale_amt_vat')
+                            ->groupBy('pro_model', 'suppliercode', 'store_id',  'type_product','sale_amt','sale_amt_vat')
                             ->get();
 
         // Query PC information in the store
