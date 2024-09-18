@@ -41,11 +41,15 @@
     
     @extends('layouts.nav_bar')
     @section('store', 'active')
-   
+    @php
+    $permissions = json_decode(Auth::user()->permissions, true); // แปลง JSON เป็น array
+    @endphp
     @section('content')
         <div align="center">
         <h1>Stores List &nbsp;
+        @if(in_array('Add_store', $permissions))
         <button class="btn btn-primary add-btn" data-bs-toggle="modal" data-bs-target="#addModal">Add Store</button>
+        @endif
         </h1>
         </div>
         
@@ -74,9 +78,13 @@
                         <td>{{ $store->store }}</td>
                         <td>{{ $store->type_store }}</td>
                         <td>
+                            @if(in_array('Edit_store', $permissions))
                             <button class="btn btn-warning edit-btn" data-id="{{ $store->id }}" data-suppliercode="{{ $store->suppliercode }}" data-store_id="{{ $store->store_id }}" data-store="{{ $store->store }}" data-type_store="{{ $store->type_store }}">Edit</button>
+                            @endif
                             &nbsp;
+                            @if(in_array('Del_store', $permissions))
                             <button class="btn btn-danger delete-btn" data-id="{{ $store->id }}">Delete</button>
+                            @endif
                         </td>
                     </tr>
                 @endforeach
