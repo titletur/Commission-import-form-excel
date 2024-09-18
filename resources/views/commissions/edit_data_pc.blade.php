@@ -1,7 +1,9 @@
 @extends('layouts.master')
 
 @section('title', 'Edit Commission Data')
-
+@php
+$permissions = json_decode(Auth::user()->permissions, true); // แปลง JSON เป็น array
+@endphp
 @section('content')
 
     <h1 class="text-center">Edit Commission PC for {{ $month }} {{ $year }}</h1>
@@ -125,10 +127,11 @@
                 </tbody>
             </table>
             
-            
+        @if(in_array('Edit_qty', $permissions))   
         <div align="center">
         <button type="submit" class="btn btn-primary" id="submit-btn">Update</button>
         </div>
+        @endif
     </form>
 
     <script>
@@ -141,14 +144,14 @@
         
                 saleQtyInputs.forEach(input => {
                     const row = input.closest('tr');
-                    const totalQty = parseFloat(row.querySelector('td:nth-child(8)').textContent.replace(',', '')) || 0;
+                    const totalQty = parseFloat(row.querySelector('td:nth-child(7)').textContent.replace(',', '')) || 0;
                     let sumQty = 0;
         
                     row.querySelectorAll('.sale-qty-input').forEach(input => {
                         const value = parseFloat(input.value.replace(',', '')) || 0;
                         sumQty += value;
                     });
-        
+
                     if (sumQty !== totalQty) {
                         row.style.backgroundColor = 'red';
                         isValid = false;
