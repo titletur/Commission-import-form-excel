@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Models\product;
+use App\Models\tb_disable_product;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
@@ -17,12 +18,19 @@ class productController extends Controller
     {
         // $stores = tb_store::all();
         // return view('stores.index', compact('stores'));
-
+        $editMode = DB::table('tb_disable_product')->value('edit_mode');
         $products = product::whereNull('status_product')
                         ->orderBy('id', 'DESC')
                         ->get();
-        return view('product.index', compact('products'));
+        return view('product.index', compact('products', 'editMode'));
         
+    }
+    public function toggleEditMode()
+    {
+        $editMode = DB::table('tb_disable_product')->value('edit_mode');
+        DB::table('tb_disable_product')->update(['edit_mode' => !$editMode]);
+
+        return redirect()->route('product.index')->with('success', $editMode ? 'Edit mode disabled.' : 'Edit mode enabled.');
     }
 
     public function store(Request $request)
