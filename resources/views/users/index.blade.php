@@ -41,11 +41,15 @@
     
     @extends('layouts.nav_bar')
     @section('users', 'active')
-   
+    @php
+    $permissions = json_decode(Auth::user()->permissions, true); // แปลง JSON เป็น array
+    @endphp
     @section('content')
         <div align="center">
         <h1>User List  &nbsp;
+            @if(in_array('Add_user', $permissions))
         <button class="btn btn-primary add-btn" data-bs-toggle="modal" data-bs-target="#addModal">Add User</button>
+            @endif
         </h1>
         </div>
         
@@ -61,7 +65,7 @@
                     <th>name</th>
                     <th>email</th>
                     <th>Department</th>
-                    <th>permissions</th>
+                    {{-- <th>permissions</th> --}}
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -72,14 +76,18 @@
                         <td>{{ $user->name }}</td>
                         <td>{{ $user->email }}</td>
                         <td>{{ $user->department }}</td>
-                        <td>{{ $user->permissions }}</td>
+                        {{-- <td>{{ $user->permissions }}</td> --}}
                         <td>
+                            @if(in_array('Edit_user', $permissions))
                             <button class="btn btn-warning edit-btn" 
                             data-id="{{ $user->id }}" data-name="{{ $user->name }}" 
                             data-email="{{ $user->email }}" data-department="{{ $user->department }}" 
-                            data-permission="{{ $user->permissions }}">Edit</button>
+                            data-permissions="{{ json_encode($user->permissions) }}">Edit</button>
+                            @endif
                             &nbsp;
+                            @if(in_array('Del_user', $permissions))
                             <button class="btn btn-danger delete-btn" data-id="{{ $user->id }}">Delete</button>
+                            @endif
                         </td>
                     </tr>
                 @endforeach
@@ -128,6 +136,100 @@
                                 <div class="col-md-12 mb-12">
                                     <label for="add_department" class="form-label">Department</label>
                                     <input type="text" class="form-control" id="add_department" name="department" >
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-12 mb-12">
+                                    <label class="form-label">Permissions</label>
+                                    <div class="form-check">
+                                        &nbsp;&nbsp;&nbsp;<input class="form-check-input" type="checkbox" id="View_data" name="permissions[]" value="View_data">
+                                        <label class="form-check-label" for="View_data">View Data</label>
+                                    </div>
+                                    <div class="form-check">
+                                        &nbsp;&nbsp;&nbsp;<input class="form-check-input" type="checkbox" id="Upload_file" name="permissions[]" value="Upload_file">
+                                        <label class="form-check-label" for="Upload_file">Upload File</label>
+                                    </div>
+                                    <div class="form-check">
+                                        &nbsp;&nbsp;&nbsp;<input class="form-check-input" type="checkbox" id="Edit_target" name="permissions[]" value="Edit_target">
+                                        <label class="form-check-label" for="Edit_target">Edit Target</label>
+                                    </div>
+                                    <div class="form-check">
+                                        &nbsp;&nbsp;&nbsp;<input class="form-check-input" type="checkbox" id="Edit_qty" name="permissions[]" value="Edit_qty">
+                                        <label class="form-check-label" for="Edit_qty">Edit Qty</label>
+                                    </div>
+                                    <div class="form-check">
+                                        &nbsp;&nbsp;&nbsp;<input class="form-check-input" type="checkbox" id="Make_completed" name="permissions[]" value="Make_completed">
+                                        <label class="form-check-label" for="Make_completed">Make Completed</label>
+                                    </div>
+                                    <label class="form-label">Stores</label>
+                                    <div class="form-check">
+                                        &nbsp;&nbsp;&nbsp;<input class="form-check-input" type="checkbox" id="Add_store" name="permissions[]" value="Add_store">
+                                        <label class="form-check-label" for="Add_store">Add Store</label>
+                                    </div>
+                                    <div class="form-check">
+                                        &nbsp;&nbsp;&nbsp;<input class="form-check-input" type="checkbox" id="Edit_store" name="permissions[]" value="Edit_store">
+                                        <label class="form-check-label" for="Edit_store">Edit stores</label>
+                                    </div>
+                                    <div class="form-check">
+                                        &nbsp;&nbsp;&nbsp;<input class="form-check-input" type="checkbox" id="Del_store" name="permissions[]" value="Del_store">
+                                        <label class="form-check-label" for="Del_store">Delete Store</label>
+                                    </div>
+                                    <label class="form-label">PC</label>
+                                    <div class="form-check">
+                                        &nbsp;&nbsp;&nbsp;<input class="form-check-input" type="checkbox" id="Add_pc" name="permissions[]" value="Add_pc">
+                                        <label class="form-check-label" for="Add_pc">Add PC</label>
+                                    </div>
+                                    <div class="form-check">
+                                        &nbsp;&nbsp;&nbsp;<input class="form-check-input" type="checkbox" id="Edit_pc" name="permissions[]" value="Edit_pc">
+                                        <label class="form-check-label" for="Edit_pc">Edit PC</label>
+                                    </div>
+                                    <div class="form-check">
+                                        &nbsp;&nbsp;&nbsp;<input class="form-check-input" type="checkbox" id="Del_pc" name="permissions[]" value="Del_pc">
+                                        <label class="form-check-label" for="Del_pc">Delete PC</label>
+                                    </div>
+                                    <label class="form-label">Sale</label>
+                                    <div class="form-check">
+                                        &nbsp;&nbsp;&nbsp;<input class="form-check-input" type="checkbox" id="Add_sale" name="permissions[]" value="Add_sale">
+                                        <label class="form-check-label" for="Add_sale">Add sale</label>
+                                    </div>
+                                    <div class="form-check">
+                                        &nbsp;&nbsp;&nbsp;<input class="form-check-input" type="checkbox" id="Edit_sale" name="permissions[]" value="Edit_sale">
+                                        <label class="form-check-label" for="Edit_sale">Edit sale</label>
+                                    </div>
+                                    <div class="form-check">
+                                        &nbsp;&nbsp;&nbsp;<input class="form-check-input" type="checkbox" id="Del_sale" name="permissions[]" value="Del_sale">
+                                        <label class="form-check-label" for="Del_sale">Delete Sale</label>
+                                    </div>
+                                    <label class="form-label">Products</label>
+                                    <div class="form-check">
+                                        &nbsp;&nbsp;&nbsp;<input class="form-check-input" type="checkbox" id="Switch_product" name="permissions[]" value="Switch_product">
+                                        <label class="form-check-label" for="Switch_product">Switch ON OFF Manage Products</label>
+                                    </div>
+                                    <div class="form-check">
+                                        &nbsp;&nbsp;&nbsp;<input class="form-check-input" type="checkbox" id="Add_product" name="permissions[]" value="Add_product">
+                                        <label class="form-check-label" for="Add_product">Add Products</label>
+                                    </div>
+                                    <div class="form-check">
+                                        &nbsp;&nbsp;&nbsp;<input class="form-check-input" type="checkbox" id="Edit_product" name="permissions[]" value="Edit_product">
+                                        <label class="form-check-label" for="Edit_product">Edit Products</label>
+                                    </div>
+                                    <div class="form-check">
+                                        &nbsp;&nbsp;&nbsp;<input class="form-check-input" type="checkbox" id="Del_product" name="permissions[]" value="Del_product">
+                                        <label class="form-check-label" for="Del_product">Delete Product</label>
+                                    </div>
+                                    <label class="form-label">User</label>
+                                    <div class="form-check">
+                                        &nbsp;&nbsp;&nbsp;<input class="form-check-input" type="checkbox" id="Add_user" name="permissions[]" value="Add_user">
+                                        <label class="form-check-label" for="Add_user">Add user</label>
+                                    </div>
+                                    <div class="form-check">
+                                        &nbsp;&nbsp;&nbsp;<input class="form-check-input" type="checkbox" id="Edit_user" name="permissions[]" value="Edit_user">
+                                        <label class="form-check-label" for="Edit_user">Edit User</label>
+                                    </div>
+                                    <div class="form-check">
+                                        &nbsp;&nbsp;&nbsp;<input class="form-check-input" type="checkbox" id="Del_user" name="permissions[]" value="Del_user">
+                                        <label class="form-check-label" for="Del_user">Delete User</label>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -184,6 +286,100 @@
                                     <input type="text" class="form-control" id="department" name="department" >
                                 </div>
                             </div>
+                            <div class="row">
+                                <div class="col-md-12 mb-12">
+                                    <label class="form-label">Permissions</label>
+                                    <div class="form-check">
+                                        &nbsp;&nbsp;&nbsp;<input class="form-check-input" type="checkbox" id="View_data" name="permissions[]" value="View_data">
+                                        <label class="form-check-label" for="View_data">View Data</label>
+                                    </div>
+                                    <div class="form-check">
+                                        &nbsp;&nbsp;&nbsp;<input class="form-check-input" type="checkbox" id="Upload_file" name="permissions[]" value="Upload_file">
+                                        <label class="form-check-label" for="Upload_file">Upload File</label>
+                                    </div>
+                                    <div class="form-check">
+                                        &nbsp;&nbsp;&nbsp;<input class="form-check-input" type="checkbox" id="Edit_target" name="permissions[]" value="Edit_target">
+                                        <label class="form-check-label" for="Edit_target">Edit Target</label>
+                                    </div>
+                                    <div class="form-check">
+                                        &nbsp;&nbsp;&nbsp;<input class="form-check-input" type="checkbox" id="Edit_qty" name="permissions[]" value="Edit_qty">
+                                        <label class="form-check-label" for="Edit_qty">Edit Qty</label>
+                                    </div>
+                                    <div class="form-check">
+                                        &nbsp;&nbsp;&nbsp;<input class="form-check-input" type="checkbox" id="Make_completed" name="permissions[]" value="Make_completed">
+                                        <label class="form-check-label" for="Make_completed">Make Completed</label>
+                                    </div>
+                                    <label class="form-label">Stores</label>
+                                    <div class="form-check">
+                                        &nbsp;&nbsp;&nbsp;<input class="form-check-input" type="checkbox" id="Add_store" name="permissions[]" value="Add_store">
+                                        <label class="form-check-label" for="Add_store">Add Store</label>
+                                    </div>
+                                    <div class="form-check">
+                                        &nbsp;&nbsp;&nbsp;<input class="form-check-input" type="checkbox" id="Edit_store" name="permissions[]" value="Edit_store">
+                                        <label class="form-check-label" for="Edit_store">Edit stores</label>
+                                    </div>
+                                    <div class="form-check">
+                                        &nbsp;&nbsp;&nbsp;<input class="form-check-input" type="checkbox" id="Del_store" name="permissions[]" value="Del_store">
+                                        <label class="form-check-label" for="Del_store">Delete Store</label>
+                                    </div>
+                                    <label class="form-label">PC</label>
+                                    <div class="form-check">
+                                        &nbsp;&nbsp;&nbsp;<input class="form-check-input" type="checkbox" id="Add_pc" name="permissions[]" value="Add_pc">
+                                        <label class="form-check-label" for="Add_pc">Add PC</label>
+                                    </div>
+                                    <div class="form-check">
+                                        &nbsp;&nbsp;&nbsp;<input class="form-check-input" type="checkbox" id="Edit_pc" name="permissions[]" value="Edit_pc">
+                                        <label class="form-check-label" for="Edit_pc">Edit PC</label>
+                                    </div>
+                                    <div class="form-check">
+                                        &nbsp;&nbsp;&nbsp;<input class="form-check-input" type="checkbox" id="Del_pc" name="permissions[]" value="Del_pc">
+                                        <label class="form-check-label" for="Del_pc">Delete PC</label>
+                                    </div>
+                                    <label class="form-label">Sale</label>
+                                    <div class="form-check">
+                                        &nbsp;&nbsp;&nbsp;<input class="form-check-input" type="checkbox" id="Add_sale" name="permissions[]" value="Add_sale">
+                                        <label class="form-check-label" for="Add_sale">Add sale</label>
+                                    </div>
+                                    <div class="form-check">
+                                        &nbsp;&nbsp;&nbsp;<input class="form-check-input" type="checkbox" id="Edit_sale" name="permissions[]" value="Edit_sale">
+                                        <label class="form-check-label" for="Edit_sale">Edit sale</label>
+                                    </div>
+                                    <div class="form-check">
+                                        &nbsp;&nbsp;&nbsp;<input class="form-check-input" type="checkbox" id="Del_sale" name="permissions[]" value="Del_sale">
+                                        <label class="form-check-label" for="Del_sale">Delete Sale</label>
+                                    </div>
+                                    <label class="form-label">Products</label>
+                                    <div class="form-check">
+                                        &nbsp;&nbsp;&nbsp;<input class="form-check-input" type="checkbox" id="Switch_product" name="permissions[]" value="Switch_product">
+                                        <label class="form-check-label" for="Switch_product">Switch ON OFF Manage Products</label>
+                                    </div>
+                                    <div class="form-check">
+                                        &nbsp;&nbsp;&nbsp;<input class="form-check-input" type="checkbox" id="Add_product" name="permissions[]" value="Add_product">
+                                        <label class="form-check-label" for="Add_product">Add Products</label>
+                                    </div>
+                                    <div class="form-check">
+                                        &nbsp;&nbsp;&nbsp;<input class="form-check-input" type="checkbox" id="Edit_product" name="permissions[]" value="Edit_product">
+                                        <label class="form-check-label" for="Edit_product">Edit Products</label>
+                                    </div>
+                                    <div class="form-check">
+                                        &nbsp;&nbsp;&nbsp;<input class="form-check-input" type="checkbox" id="Del_product" name="permissions[]" value="Del_product">
+                                        <label class="form-check-label" for="Del_product">Delete Product</label>
+                                    </div>
+                                    <label class="form-label">User</label>
+                                    <div class="form-check">
+                                        &nbsp;&nbsp;&nbsp;<input class="form-check-input" type="checkbox" id="Add_user" name="permissions[]" value="Add_user">
+                                        <label class="form-check-label" for="Add_user">Add user</label>
+                                    </div>
+                                    <div class="form-check">
+                                        &nbsp;&nbsp;&nbsp;<input class="form-check-input" type="checkbox" id="Edit_user" name="permissions[]" value="Edit_user">
+                                        <label class="form-check-label" for="Edit_user">Edit User</label>
+                                    </div>
+                                    <div class="form-check">
+                                        &nbsp;&nbsp;&nbsp;<input class="form-check-input" type="checkbox" id="Del_user" name="permissions[]" value="Del_user">
+                                        <label class="form-check-label" for="Del_user">Delete User</label>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <input type="hidden" id="user_id_hidden" name="id">
@@ -237,7 +433,8 @@
                 var name = $(this).data('name');
                 var email = $(this).data('email');
                 var department = $(this).data('department');
-                
+                var permissions = $(this).data('permissions');
+                // alert (permissions);
 
                 $('#name').val(name);
                 $('#email').val(email);
@@ -245,6 +442,14 @@
                 
                 $('#user_id_hidden').val(id);
                 
+                var permissionArray = permissions || [];
+                $('input[name="permissions[]"]').each(function() {
+                    if (permissionArray.includes($(this).val())) {
+                        $(this).prop('checked', true);
+                    } else {
+                        $(this).prop('checked', false);
+                    }
+                });
                 $('#editForm').attr('action', '/users/' + id);
                 $('#editModal').modal('show');
             });
