@@ -127,7 +127,7 @@ $permissions = json_decode(Auth::user()->permissions, true); // แปลง JSO
                 </tbody>
             </table>
             
-        @if(in_array('Edit_qty', $permissions))   
+        @if(in_array('Edit_qty', $permissions))      
         <div align="center">
         <button type="submit" class="btn btn-primary" id="submit-btn">Update</button>
         </div>
@@ -151,7 +151,7 @@ $permissions = json_decode(Auth::user()->permissions, true); // แปลง JSO
                         const value = parseFloat(input.value.replace(',', '')) || 0;
                         sumQty += value;
                     });
-
+        
                     if (sumQty !== totalQty) {
                         row.style.backgroundColor = 'red';
                         isValid = false;
