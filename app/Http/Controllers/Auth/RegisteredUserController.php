@@ -42,7 +42,7 @@ class RegisteredUserController extends Controller
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'department' => $request->department,
-            'permissions' => 'users',
+            'permissions' => json_encode(['View_data']),
         ]);
 
         event(new Registered($user));
