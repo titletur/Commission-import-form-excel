@@ -81,6 +81,7 @@ Route::middleware(['auth', CheckImportPermission::class])->group(function () {
     Route::resource('product', productController::class)->except(['show']);
     Route::patch('product/{id}/status', [productController::class, 'updateStatus'])->name('product.updateStatus');
     Route::get('/products/export', [productController::class, 'export'])->name('products.export');
+    Route::post('/toggle-edit-mode', [productController::class, 'toggleEditMode'])->name('toggleEditMode');
 
      //Users manage
     Route::resource('users', manageUsersController::class)->except(['show']);
