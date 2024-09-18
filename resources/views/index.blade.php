@@ -37,7 +37,10 @@
                 });
             </script>
         @endif
-
+        
+        @php
+        $permissions = json_decode(Auth::user()->permissions, true); // แปลง JSON เป็น array
+        @endphp
         <!-- Table to display monthly commission data -->
         <table class="table table-bordered table-striped">
             <thead>
@@ -57,27 +60,39 @@
                             {{-- <a href="{{ $data['show_link'] }}" class="{{ $data['disabled'] ? 'disabled' : '' }}">
                                 {{ $data['month'] }}
                             </a> --}}
+                            @if(in_array('Edit_qty', $permissions))
                             <a href="{{ $data['disabled'] ? '#' : $data['show_link'] }}" 
                                 class="{{ $data['disabled'] ? 'disabled' : '' }}" 
                                 style="{{ $data['disabled'] ? 'pointer-events: none; color: gray;' : '' }}">
                                     {{ $data['month'] }}
                             </a>
+                            @else
+                                {{ $data['month'] }}
+                            @endif
                         </td>
                         <td>
+                            @if(in_array('Upload_file', $permissions))
                             <a href="{{ $data['disabled'] ? '#' : $data['import_link'] }}" 
                             class="{{ $data['disabled'] ? 'disabled' : '' }}"
                             style="{{ $data['disabled'] ? 'pointer-events: none; color: gray;' : '' }}">
                             <img src="{{ asset('import.jpg') }}" width="17" height="17" alt="Import"> Upload
                             </a>
+                            @else
+                            <img src="{{ asset('import.jpg') }}" width="17" height="17" alt="Import"> Upload
+                            @endif
                         </td>
                         <td>{{ number_format($data['sale_in'], 0) }}</td>
                         <td>{{ number_format($data['pay_com'], 0) }}</td>
                         <td>
+                            @if(in_array('Edit_target', $permissions))
                             <a href="{{ $data['disabled'] ? '#' : $data['target_link'] }}" 
                             class="{{ $data['disabled'] ? 'disabled' : '' }}"
                             style="{{ $data['disabled'] ? 'pointer-events: none; color: gray;' : '' }}">
                             <img src="{{ asset('edit.jpg') }}" width="17" height="17" alt="Import"> Edit Target
                             </a>
+                            @else
+                            <img src="{{ asset('edit.jpg') }}" width="17" height="17" alt="Import"> Edit Target
+                            @endif
                         </td>
                         <td>
                             {{-- {{ $data['status'] == 1 ? 'Completed' : 'Pending' }} --}}
@@ -88,12 +103,14 @@
                              <img src="{{ asset('export.png') }}" width="20" height="20" alt="Export"> 
                              </a>
                             @else
+                                @if(in_array('Make_completed', $permissions))
                                 <form action="{{ route('status.updateOrCreate') }}" method="POST" style="display:inline;"> 
                                     @csrf
                                     <input type="hidden" name="as_of_month" value="{{ $data['var_month'] }}">
                                     <input type="hidden" name="as_of_year" value="{{ $data['var_year'] }}">
                                     <button type="submit" class="btn btn-success">Mark as Completed</button>
                                 </form>
+                                @endif
                             @endif
 
                         </td>
