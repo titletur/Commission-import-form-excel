@@ -120,7 +120,9 @@
             });
         </script>
     @endif
-
+    @php
+    $permissions = json_decode(Auth::user()->permissions, true); // แปลง JSON เป็น array
+    @endphp
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
     <a class="navbar-brand" href="#"><img src="{{ asset('logo.png') }}" width="100" height="25" alt="Logo"></a>
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
@@ -144,8 +146,8 @@
             <li class="nav-item @yield('product')">
                 <a class="nav-link" href="{{ route('product.index') }}">Product</a>
             </li>
-            @if(session('user_permission') == 'admin')
-            <li class="nav-item dropdown @yield('admin')">
+            @if(in_array('Add_user', $permissions))
+            <li class="nav-item dropdown">
                 <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                     Admin
                 </a>
