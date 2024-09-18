@@ -73,7 +73,7 @@
                     <tr>
                         <th>Supplier Code</th>
                         <th>Store ID</th>
-                        <th>Type Store</th>
+                        {{-- <th>Type Store</th> --}}
                         <th>Product Model</th>
                         <th>Type Product</th>
                         <th>Sale Amount</th>
@@ -89,7 +89,7 @@
                         <tr>
                             <td>{{ $commission->suppliercode }}</td>
                             <td>{{ $commission->store_id }}</td>
-                            <td>{{ $commission->type_store }}</td>
+                            {{-- <td>{{ $commission->type_store }}</td> --}}
                             <td>{{ $commission->pro_model }}</td>
                             <td>{{ $commission->type_product }}</td>
                             <td>{{ number_format($commission->sale_amt, 0) }}</td>
