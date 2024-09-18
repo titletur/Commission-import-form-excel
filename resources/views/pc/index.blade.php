@@ -42,11 +42,15 @@
     
     @extends('layouts.nav_bar')
     @section('pc', 'active')
-   
+    @php
+    $permissions = json_decode(Auth::user()->permissions, true); // แปลง JSON เป็น array
+    @endphp
     @section('content')
         <div align="center">
         <h1>PC List  &nbsp;
+        @if(in_array('Add_pc', $permissions))
         <button class="btn btn-primary add-btn" data-bs-toggle="modal" data-bs-target="#addModal">Add PC</button>
+        @endif    
         </h1>
         </div>
         
@@ -82,9 +86,13 @@
                         <td>{{ $pc->tarket }}</td>
                         <td>{{ $pc->salary }}</td>
                         <td>
+                            @if(in_array('Edit_pc', $permissions))
                             <button class="btn btn-warning edit-btn" data-id="{{ $pc->id }}" data-store_id="{{ $pc->store_id }}" data-type_store="{{ $pc->type_store }}" data-code_pc="{{ $pc->code_pc }}" data-name_pc="{{ $pc->name_pc }}" data-type_pc="{{ $pc->type_pc }}" data-tarket="{{ $pc->tarket }}" data-salary="{{ $pc->salary }}">Edit</button>
+                            @endif
                             &nbsp;
+                            @if(in_array('Del_pc', $permissions))
                             <button class="btn btn-danger delete-btn" data-id="{{ $pc->id }}">Delete</button>
+                            @endif
                         </td>
                     </tr>
                 @endforeach
