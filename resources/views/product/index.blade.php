@@ -49,9 +49,23 @@
         </h1>
         </div>
         
-        <div class="mb-3 text-right">
-            <a href="{{ route('products.export', ['type' => 'excel']) }}" class="btn btn-success">Export to Excel</a>
-            {{-- <a href="{{ route('stores.export', ['type' => 'pdf']) }}" target="_blank" class="btn btn-danger" >Export to PDF</a> --}}
+
+        <div class="mb-6 text-right">
+            @if(Auth::user()->id === 1 || Auth::user()->permissions === 'adminacc')
+            <form action="{{ route('toggleEditMode') }}" method="POST" class="d-inline">
+                @csrf
+                <button type="submit" class="btn btn-info">
+                    @if($editMode)
+                        Disable Edit 
+                    @else
+                        Enable Edit 
+                    @endif
+                </button>
+            </form> 
+            @endif    
+            <a href="{{ route('products.export', ['type' => 'excel']) }}" class="btn btn-success d-inline ml-2">Export to Excel</a>
+            {{-- <a href="{{ route('stores.export', ['type' => 'pdf']) }}" target="_blank" class="btn btn-danger ml-2">Export to PDF</a> --}}
+            
         </div>
 
         <table id="data-table" class="table table-bordered">
@@ -96,6 +110,7 @@
                         <td>{{ $product->price_vat }}</td>
                         <td>{{ $product->com }}</td>
                         <td>
+                            @if($editMode)
                             <button class="btn btn-warning edit-btn" 
                             data-id="{{ $product->id }}" data-suppliercode="{{ $product->suppliercode }}" 
                             data-division="{{ $product->division }}" data-department="{{ $product->department }}" 
@@ -107,6 +122,7 @@
                             data-price_vat="{{ $product->price_vat }}" data-com="{{ $product->com }}">Edit</button>
                             &nbsp;
                             <button class="btn btn-danger delete-btn" data-id="{{ $product->id }}">Delete</button>
+                            @endif
                         </td>
                     </tr>
                 @endforeach
