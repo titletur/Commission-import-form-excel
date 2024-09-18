@@ -33,6 +33,8 @@ class manageUsersController extends Controller
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
             'department' => ['required', 'string', 'max:50'],
+            'permissions' => ['array'],
+            'permissions.*' => ['string'],
         ]);
 
         $user = User::updateOrCreate([
@@ -42,7 +44,7 @@ class manageUsersController extends Controller
             'name' => $request->name,
             'password' => Hash::make($request->password),
             'department' => $request->department,
-            'permissions' => 'users',
+            'permissions' => json_encode($request->input('permissions', [])),
             
         ]);
 
@@ -62,10 +64,16 @@ class manageUsersController extends Controller
             'name' => ['required', 'string', 'max:255'],
             // 'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
             'department' => ['required', 'string', 'max:50'],
+            'permissions' => ['array'],
+            'permissions.*' => ['string'],
         ]);
     
         $user = User::findOrFail($id);
-        $user->update($request->all());
+        // $user->update($request->all());
+        $user->name = $request->input('name');
+        $user->department = $request->input('department');
+        $user->permissions = json_encode($request->input('permissions', []));
+        $user->save();
     
         return redirect()->route('users.index')->with('success', 'User updated successfully.');
         } catch (\Exception $e) {
