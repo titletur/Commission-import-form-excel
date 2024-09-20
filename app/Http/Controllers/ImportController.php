@@ -146,8 +146,11 @@ class ImportController extends Controller
             foreach ($data as $key => $row) {
                 
                 $price_amt_vat = ($row['sale_amt_ty']*1.07);
-                $price = $row['sale_amt_ty']/$row['sale_qty_ty'];
-                $price_vat = ($row['sale_amt_ty']*1.07)/$row['sale_qty_ty'];
+                // $price = $row['sale_amt_ty']/$row['sale_qty_ty'];
+                // $price_vat = ($row['sale_amt_ty']*1.07)/$row['sale_qty_ty'];
+                $price = abs($row['sale_amt_ty']) / abs($row['sale_qty_ty']);
+                $price_vat = abs(($row['sale_amt_ty'] * 1.07)) / abs($row['sale_qty_ty']);
+
 
                 if($row['suppliercode'] == '4400215'){
                     $type_product = "AV";
@@ -156,6 +159,9 @@ class ImportController extends Controller
                 }else{
                     $type_product = "TV";
                 }
+                // if($row['pro_model'] ='AN-FR5250S' && $row['store_id'] =='11129'){
+                // dd($data);
+                // }
                 Transaction::create([
                 'report_code' => $row['report_code'],
                 'suppliercode' => $row['suppliercode'],
@@ -279,16 +285,16 @@ class ImportController extends Controller
                         [
                             'type_store' => $pc->type_store,
                             'type_product' => $type_product,
-                            'sale_amt' => $row['sale_amt_ty'] / $row['sale_qty_ty'],
-                            'sale_amt_vat' => ($row['sale_amt_ty'] * 1.07) / $row['sale_qty_ty'], // การคำนวณ VAT
+                            'sale_amt' => ($row['sale_amt_ty'] < 0 ? -1 : 1) * (abs($row['sale_amt_ty']) / abs($row['sale_qty_ty'])),
+                            'sale_amt_vat' => ($row['sale_amt_ty'] < 0 ? -1 : 1) * ((abs($row['sale_amt_ty']) * 1.07) / abs($row['sale_qty_ty'])), // การคำนวณ VAT
                             'sale_qty' => $row['sale_qty_ty'],
                             'com' => $com,
                             'type_pc' => $pc->type_pc,
                         ]
                     );
                 } else if ($pcs->count() > 1) {
-                    $sale_qty_per_pc = (int)($row['sale_qty_ty'] / $pcs->count());
-                    $remaining_qty = $row['sale_qty_ty'] - ($sale_qty_per_pc * $pcs->count());
+                    $sale_qty_per_pc = (int)(abs($row['sale_qty_ty']) / $pcs->count());
+                    $remaining_qty = abs($row['sale_qty_ty']) - (abs($sale_qty_per_pc) * $pcs->count());
 
                     foreach ($pcs as $pc) {
                         $com = $this->calculateCom($row['pro_model']); // Calculate commission
@@ -323,9 +329,11 @@ class ImportController extends Controller
                             [
                                 'type_store' => $pc->type_store,
                                 'type_product' => $type_product,
-                                'sale_amt' => $row['sale_amt_ty'] / $row['sale_qty_ty'],
-                                'sale_amt_vat' => ($row['sale_amt_ty'] * 1.07) / $row['sale_qty_ty'], 
-                                'sale_qty' => $sale_qty_per_pc + ($remaining_qty > 0 ? 1 : 0),
+                                'sale_amt' => ($row['sale_amt_ty'] < 0 ? -1 : 1) * (abs($row['sale_amt_ty']) / abs($row['sale_qty_ty'])),
+                                'sale_amt_vat' => ($row['sale_amt_ty'] < 0 ? -1 : 1) * ((abs($row['sale_amt_ty']) * 1.07) / abs($row['sale_qty_ty'])), 
+                                // 'sale_qty' => $sale_qty_per_pc + ($remaining_qty > 0 ? 1 : 0),
+                                'sale_qty' => ($row['sale_qty_ty'] < 0 ? -1 : 1) * ($sale_qty_per_pc + ($remaining_qty > 0 ? 1 : 0)),
+
                                 'com' => $com,
                                 'type_pc' => $pc->type_pc,
                             ]
@@ -351,11 +359,20 @@ class ImportController extends Controller
                 ->select(
                     'store_id',
                     'id_pc',
-                    DB::raw('SUM(CASE WHEN type_product = "TV" THEN sale_amt_vat * sale_qty ELSE 0 END) as sale_tv'),
+                    // DB::raw('SUM(CASE WHEN type_product = "TV" THEN sale_amt_vat * sale_qty ELSE 0 END) as sale_tv'),
+                    DB::raw('SUM(CASE WHEN type_product = "TV" AND sale_qty > 0  THEN sale_amt_vat * sale_qty
+                                WHEN type_product = "TV" AND sale_qty < 0 THEN -1 * ABS(sale_amt_vat) * ABS(sale_qty)
+                                ELSE 0 END) as sale_tv'),
                     DB::raw('SUM(CASE WHEN type_product = "TV" THEN sale_qty ELSE 0 END) as unit_tv'),
-                    DB::raw('SUM(CASE WHEN type_product = "AV" THEN sale_amt_vat * sale_qty ELSE 0 END) as sale_av'),
+                    // DB::raw('SUM(CASE WHEN type_product = "AV" THEN sale_amt_vat * sale_qty ELSE 0 END) as sale_av'),
+                    DB::raw('SUM(CASE WHEN type_product = "AV" AND sale_qty > 0  THEN sale_amt_vat * sale_qty
+                                WHEN type_product = "AV" AND sale_qty < 0 THEN -1 * ABS(sale_amt_vat) * ABS(sale_qty)
+                                ELSE 0 END) as sale_av'),
                     DB::raw('SUM(CASE WHEN type_product = "AV" THEN sale_qty ELSE 0 END) as unit_av'),
-                    DB::raw('SUM(CASE WHEN type_product = "HA" THEN sale_amt_vat * sale_qty ELSE 0 END) as sale_ha'),
+                    // DB::raw('SUM(CASE WHEN type_product = "HA" THEN sale_amt_vat * sale_qty ELSE 0 END) as sale_ha'),
+                    DB::raw('SUM(CASE WHEN type_product = "HA" AND sale_qty > 0  THEN sale_amt_vat * sale_qty
+                                WHEN type_product = "HA" AND sale_qty < 0 THEN -1 * ABS(sale_amt_vat) * ABS(sale_qty)
+                                ELSE 0 END) as sale_ha'),
                     DB::raw('SUM(CASE WHEN type_product = "HA" THEN sale_qty ELSE 0 END) as unit_ha')
                 )
                 ->where('as_of_month', $var_month)
@@ -514,6 +531,18 @@ class ImportController extends Controller
                         $data->com_tv = $data->sale_tv * 0.05;
                         $data->com_av = $data->sale_av * 0.05;
                         $data->com_ha = $data->sale_ha * 0.05;
+                        $sale_out = $data->sale_tv + $data->sale_av + $data->sale_ha;
+                        if ($sale_out > 299999) {
+                            $data->extra_tv = 6000;
+                        } elseif ($sale_out > 199999) {
+                            $data->extra_tv = 5000;
+                        } elseif ($sale_out > 149999) {
+                            $data->extra_tv = 4000;
+                        } elseif ($sale_out > 99999) {
+                            $data->extra_tv = 2000;
+                        } else {
+                            $data->extra_tv = 0;
+                        }
                         break;
                     case 'Freelance_plus':
                         $data->com_tv = $data->sale_tv * 0.05;
@@ -623,7 +652,7 @@ class ImportController extends Controller
                     ->where('as_of_year', $var_year)
                     ->sum('sale_ha');
                 
-                $totalSale = $total_sale_tv + $total_sale_av + $total_sale_av;
+                $totalSale = $total_sale_tv + $total_sale_av + $total_sale_ha;
 
                 $total_unit_tv = main_commission::whereIn('store_id', $subStores)
                     ->where('as_of_month', $var_month)
