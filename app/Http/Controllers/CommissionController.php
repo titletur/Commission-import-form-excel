@@ -9,6 +9,8 @@ use App\Models\tb_commission_sale;
 use App\Models\tb_status;
 use App\Models\tb_pc;
 use App\Models\tb_month;
+use App\Models\tb_sale;
+use App\Models\tb_sub_sale;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
@@ -61,6 +63,9 @@ class CommissionController extends Controller
                         ->where('tb_commission_sale.as_of_month', $var_month)
                         ->select('tb_commission_sale.*', 'tb_sale.name_sale', 'tb_sale.code_sale') // รวมข้อมูลจาก tb_commission_sale และ tb_sale
                         ->get();
+        
+
+
         $totals = [
             'num_count' => $commissions->count('name_pc'),
             'pc_salary' => $commissions->sum('pc_salary'),
@@ -438,7 +443,7 @@ class CommissionController extends Controller
                             ->where('store_id', $store_id)
                             ->where('as_of_month', $var_month)
                             ->where('as_of_year', $year)
-                            ->groupBy('pro_model', 'suppliercode', 'store_id', 'type_product','sale_amt','sale_amt_vat')
+                            ->groupBy('pro_model', 'suppliercode', 'store_id',  'type_product','sale_amt','sale_amt_vat')
                             ->get();
 
         // Query PC information in the store
@@ -463,6 +468,7 @@ class CommissionController extends Controller
         $month = $request->input('month');
         $var_month = $request->input('var_month');
         $year = $request->input('year');
+        $add_total = str_replace(',', '',$request->input('add_total'));
         $other = str_replace(',', '',$request->input('other'));
         $remark = $request->input('remark');
         try {
@@ -474,16 +480,131 @@ class CommissionController extends Controller
 
                 if ($commissionSale) {
                     // คำนวณค่า total ใหม่
-                    $newTotal = $commissionSale->total + str_replace(',', '', $value);
+                    ////////////////////////////////////////
+                
+                $sale = tb_sale::where('id_sale', $commissionSale->id_sale)->first();
 
+                $id_sale = $sale->id_sale;
+                $subStores = tb_sub_sale::where('id_sale', $id_sale)->pluck('store_id');
+                
+                // Calculate total sales and units
+                $total_sale_tv = main_commission::whereIn('store_id', $subStores)
+                    ->where('as_of_month', $var_month)
+                    ->where('as_of_year', $year)
+                    ->sum('sale_tv');
+
+                $total_sale_av = main_commission::whereIn('store_id', $subStores)
+                    ->where('as_of_month', $var_month)
+                    ->where('as_of_year', $year)
+                    ->sum('sale_av');
+                
+                $total_sale_ha = main_commission::whereIn('store_id', $subStores)
+                    ->where('as_of_month', $var_month)
+                    ->where('as_of_year', $year)
+                    ->sum('sale_ha');
+                
+                $totalSale = $add_total[$id] + $total_sale_tv + $total_sale_av + $total_sale_ha;
+
+                $total_unit_tv = main_commission::whereIn('store_id', $subStores)
+                    ->where('as_of_month', $var_month)
+                    ->where('as_of_year', $year)
+                    ->sum('unit_tv');
+                
+                $total_unit_av = main_commission::whereIn('store_id', $subStores)
+                    ->where('as_of_month', $var_month)
+                    ->where('as_of_year', $year)
+                    ->sum('unit_av');
+
+                $total_unit_ha = main_commission::whereIn('store_id', $subStores)
+                    ->where('as_of_month', $var_month)
+                    ->where('as_of_year', $year)
+                    ->sum('unit_ha');
+                    
+                    if ($sale->target > 0) {
+                        $achieve = ($totalSale * 100) / $sale->target;
+                    } else {
+                        $achieve = 0; // หรือค่าที่เหมาะสมอื่น ๆ ถ้า target เป็น 0
+                    }
+                // Calculate achieve and commission
+                // $achieve = ($totalSale *100) / $sale->target ;
+                $comSale = ($sale->base_com * $achieve) / 100;
+
+                // Calculate extra_sale_out based on achieve
+                $extraSaleOut = 0;
+                if ($achieve > 140) $extraSaleOut = 12000;
+                elseif ($achieve > 120) $extraSaleOut = 11000;
+                elseif ($achieve > 100) $extraSaleOut = 8000;
+                elseif ($achieve > 80) $extraSaleOut = 7000;
+
+                // Calculate extra_unit based on total units sold
+                $extraUnit = 0;
+                if ($total_unit_tv > 4999) $extraUnit = 6000;
+                elseif ($total_unit_tv > 3999) $extraUnit = 5000;
+
+                // Calculate avgSalePerPC for extra_avg
+                $totalSale_pc = main_commission::whereIn('store_id', $subStores)
+                    ->where('as_of_month', $var_month)
+                    ->where('as_of_year', $year)
+                    ->where('type_pc', 'PC')
+                    ->sum('sale_total');
+
+                $totalPCs = main_commission::whereIn('store_id', $subStores)
+                    ->where('as_of_month', $var_month)
+                    ->where('as_of_year', $year)
+                    ->where('type_pc', 'pc')
+                    ->count();
+
+                    if ($totalSale_pc > 0 && $totalPCs >0) {
+                        $avgSalePerPC = $totalSale_pc / $totalPCs;
+                    }else{
+                        $avgSalePerPC =0;
+                    }
+
+                $extraAvg = 0;
+                if ($avgSalePerPC > 400000) $extraAvg = 8000;
+                elseif ($avgSalePerPC > 350000) $extraAvg = 6000;
+                elseif ($avgSalePerPC > 300000) $extraAvg = 5000;
+
+                $sum_total_sale = $comSale + $extraSaleOut + $extraUnit + $extraAvg + str_replace(',', '', $value); ;
+                // Insert or update tb_commission_sale
                 DB::table('tb_commission_sale')
                     ->where('id', $id)
                     ->update([
+                        'target' => $sale->target,
+                        'achieve' => $achieve,
+                        'base_com' => $sale->base_com,
+                        'com_sale' => $comSale,
+                        'add_total' => str_replace(',', '', $add_total[$id]),
+                        'sale_tv' => $total_sale_tv,
+                        'unit_tv' => $total_unit_tv,
+                        'sale_av' => $total_sale_av,
+                        'unit_av' => $total_unit_av,
+                        'sale_ha' => $total_sale_ha,
+                        'unit_ha' => $total_unit_ha,
+                        'sale_out' => $totalSale,
+
+                        'extra_sale_out' => $extraSaleOut,
+                        'extra_unit' => $extraUnit,
+                        'extra_avg' => $extraAvg,
+                        'total' => $sum_total_sale,
                         'other' => str_replace(',', '', $value), 
-                        'total' => $newTotal,
                         'remark' => $remark[$id] 
-                    ]);
+                    ]
+                );
+                    /////////////////////////////////////////
+                // DB::table('tb_commission_sale')
+                //     ->where('id', $id)
+                //     ->update([
+                //         'add_total' => str_replace(',', '', $add_total[$id]),
+                //         'other' => str_replace(',', '', $value), 
+                //         'total' => $newTotal,
+                //         'remark' => $remark[$id] 
+                //     ]);
                 }
+                #########################
+             // Query all sales
+            
+                
             }
 
         return redirect()->route('commissions.show', ['year' => $year, 'month' => $month , 'var_month' => $var_month])
@@ -563,11 +684,20 @@ class CommissionController extends Controller
                 ->select(
                     'store_id',
                     'id_pc',
-                    DB::raw('SUM(CASE WHEN type_product = "TV" THEN sale_amt_vat * sale_qty ELSE 0 END) as sale_tv'),
+                    // DB::raw('SUM(CASE WHEN type_product = "TV" THEN sale_amt_vat * sale_qty ELSE 0 END) as sale_tv'),
+                    DB::raw('SUM(CASE WHEN type_product = "TV" AND sale_qty > 0  THEN sale_amt_vat * sale_qty
+                                WHEN type_product = "TV" AND sale_qty < 0 THEN -1 * ABS(sale_amt_vat) * ABS(sale_qty)
+                                ELSE 0 END) as sale_tv'),
                     DB::raw('SUM(CASE WHEN type_product = "TV" THEN sale_qty ELSE 0 END) as unit_tv'),
-                    DB::raw('SUM(CASE WHEN type_product = "AV" THEN sale_amt_vat * sale_qty ELSE 0 END) as sale_av'),
+                    // DB::raw('SUM(CASE WHEN type_product = "AV" THEN sale_amt_vat * sale_qty ELSE 0 END) as sale_av'),
+                    DB::raw('SUM(CASE WHEN type_product = "AV" AND sale_qty > 0  THEN sale_amt_vat * sale_qty
+                                WHEN type_product = "AV" AND sale_qty < 0 THEN -1 * ABS(sale_amt_vat) * ABS(sale_qty)
+                                ELSE 0 END) as sale_av'),
                     DB::raw('SUM(CASE WHEN type_product = "AV" THEN sale_qty ELSE 0 END) as unit_av'),
-                    DB::raw('SUM(CASE WHEN type_product = "HA" THEN sale_amt_vat * sale_qty ELSE 0 END) as sale_ha'),
+                    // DB::raw('SUM(CASE WHEN type_product = "HA" THEN sale_amt_vat * sale_qty ELSE 0 END) as sale_ha'),
+                    DB::raw('SUM(CASE WHEN type_product = "HA" AND sale_qty > 0  THEN sale_amt_vat * sale_qty
+                                WHEN type_product = "HA" AND sale_qty < 0 THEN -1 * ABS(sale_amt_vat) * ABS(sale_qty)
+                                ELSE 0 END) as sale_ha'),
                     DB::raw('SUM(CASE WHEN type_product = "HA" THEN sale_qty ELSE 0 END) as unit_ha')
                 )
                 ->where('as_of_month', $var_month)
@@ -589,11 +719,14 @@ class CommissionController extends Controller
                 ->where('id_pc', $id_pc)
                 ->groupBy('store_id', 'id_pc')
                 ->get();
+                
+                
+
                 $combinedData = $salesData->map(function ($sale) use ($commissionData) {
                     $commission = $commissionData->first(function ($item) use ($sale) {
                         return $item->store_id == $sale->store_id && $item->id_pc == $sale->id_pc;
                     });
-                
+                    // dd($commission, $sale);
                     return (object) [
                         'store_id' => $sale->store_id,
                         'id_pc' => $sale->id_pc,
@@ -726,6 +859,18 @@ class CommissionController extends Controller
                             $data->com_tv = $data->sale_tv * 0.05;
                             $data->com_av = $data->sale_av * 0.05;
                             $data->com_ha = $data->sale_ha * 0.05;
+                            $sale_out = $data->sale_tv + $data->sale_av + $data->sale_ha;
+                            if ($sale_out > 299999) {
+                                $data->extra_tv = 6000;
+                            } elseif ($sale_out > 199999) {
+                                $data->extra_tv = 5000;
+                            } elseif ($sale_out > 149999) {
+                                $data->extra_tv = 4000;
+                            } elseif ($sale_out > 99999) {
+                                $data->extra_tv = 2000;
+                            } else {
+                                $data->extra_tv = 0;
+                            }
                             break;
                         case 'Freelance_plus':
                             $data->com_tv = $data->sale_tv * 0.05;
@@ -874,16 +1019,25 @@ class CommissionController extends Controller
                 ->update(['type_pc' => $type_pc,]);
 
 
-            $salesData = DB::table('tb_commission')
-                    ->select(
-                        'store_id',
-                        'id_pc',
-                        DB::raw('SUM(CASE WHEN type_product = "TV" THEN sale_amt_vat * sale_qty ELSE 0 END) as sale_tv'),
-                        DB::raw('SUM(CASE WHEN type_product = "TV" THEN sale_qty ELSE 0 END) as unit_tv'),
-                        DB::raw('SUM(CASE WHEN type_product = "AV" THEN sale_amt_vat * sale_qty ELSE 0 END) as sale_av'),
-                        DB::raw('SUM(CASE WHEN type_product = "AV" THEN sale_qty ELSE 0 END) as unit_av'),
-                        DB::raw('SUM(CASE WHEN type_product = "HA" THEN sale_amt_vat * sale_qty ELSE 0 END) as sale_ha'),
-                        DB::raw('SUM(CASE WHEN type_product = "HA" THEN sale_qty ELSE 0 END) as unit_ha')
+                $salesData = DB::table('tb_commission')
+                ->select(
+                    'store_id',
+                    'id_pc',
+                    // DB::raw('SUM(CASE WHEN type_product = "TV" THEN sale_amt_vat * sale_qty ELSE 0 END) as sale_tv'),
+                    DB::raw('SUM(CASE WHEN type_product = "TV" AND sale_qty > 0  THEN sale_amt_vat * sale_qty
+                                WHEN type_product = "TV" AND sale_qty < 0 THEN -1 * ABS(sale_amt_vat) * ABS(sale_qty)
+                                ELSE 0 END) as sale_tv'),
+                    DB::raw('SUM(CASE WHEN type_product = "TV" THEN sale_qty ELSE 0 END) as unit_tv'),
+                    // DB::raw('SUM(CASE WHEN type_product = "AV" THEN sale_amt_vat * sale_qty ELSE 0 END) as sale_av'),
+                    DB::raw('SUM(CASE WHEN type_product = "AV" AND sale_qty > 0  THEN sale_amt_vat * sale_qty
+                                WHEN type_product = "AV" AND sale_qty < 0 THEN -1 * ABS(sale_amt_vat) * ABS(sale_qty)
+                                ELSE 0 END) as sale_av'),
+                    DB::raw('SUM(CASE WHEN type_product = "AV" THEN sale_qty ELSE 0 END) as unit_av'),
+                    // DB::raw('SUM(CASE WHEN type_product = "HA" THEN sale_amt_vat * sale_qty ELSE 0 END) as sale_ha'),
+                    DB::raw('SUM(CASE WHEN type_product = "HA" AND sale_qty > 0  THEN sale_amt_vat * sale_qty
+                                WHEN type_product = "HA" AND sale_qty < 0 THEN -1 * ABS(sale_amt_vat) * ABS(sale_qty)
+                                ELSE 0 END) as sale_ha'),
+                    DB::raw('SUM(CASE WHEN type_product = "HA" THEN sale_qty ELSE 0 END) as unit_ha')
                     )
                     ->where('as_of_month', $request->input('var_month'))
                     ->where('as_of_year', $request->input('year'))
@@ -1040,6 +1194,18 @@ class CommissionController extends Controller
                                 $data->com_tv = $data->sale_tv * 0.05;
                                 $data->com_av = $data->sale_av * 0.05;
                                 $data->com_ha = $data->sale_ha * 0.05;
+                                $sale_out = $data->sale_tv + $data->sale_av + $data->sale_ha;
+                                if ($sale_out > 299999) {
+                                    $data->extra_tv = 6000;
+                                } elseif ($sale_out > 199999) {
+                                    $data->extra_tv = 5000;
+                                } elseif ($sale_out > 149999) {
+                                    $data->extra_tv = 4000;
+                                } elseif ($sale_out > 99999) {
+                                    $data->extra_tv = 2000;
+                                } else {
+                                    $data->extra_tv = 0;
+                                }
                                 break;
                             case 'Freelance_plus':
                                 $data->com_tv = $data->sale_tv * 0.05;
