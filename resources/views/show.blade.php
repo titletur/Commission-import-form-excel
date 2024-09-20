@@ -138,6 +138,7 @@
                     <th>Code</th>
                     <th>Name</th>
                     <th>Target</th>
+                    <th>Add Sale Out</th>
                     <th>Sale Out</th>
                     <th>Sale TV</th>
                     <th>Sale AV</th>
@@ -163,6 +164,7 @@
                         <td>{{ $commissionSale->code_sale }}</td>
                         <td>{{ $commissionSale->name_sale }}</td>
                         <td>{{ number_format($commissionSale->target,0) }}</td>
+                        <td><input type="text" name="add_total[{{ $commissionSale->id }}]" value="{{ number_format($commissionSale->add_total,0) }}"  style="width: 100px;"></td>
                         <td>{{ number_format($commissionSale->sale_out,0) }}</td>
                         <td>{{ number_format($commissionSale->sale_tv,0) }}</td>
                         <td>{{ number_format($commissionSale->sale_av,0) }}</td>
