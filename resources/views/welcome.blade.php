@@ -59,12 +59,32 @@
                         @endif
                     </header>
 
-                    <main class="mt-6">
+                    {{-- <main class="mt-6">
                         <div class="grid gap-6 lg:grid-cols-2 lg:gap-8">
+                            <img src="{{ asset('bigc.jpg') }}" alt="Big-c" width="150" style="border-radius: 15%; margin-right: 10px;">
                             <br><br><br><br><br><br><br><br><br>
                             <br><br><br><br><br><br><br><br><br>
                         </div>
+                    </main> --}}
+                    <main class="mt-6 flex justify-center items-center">
+                        <div class="relative p-6" style="background: rgba(255, 255, 255, 0.5); border-radius: 15px; text-align: Left; width: 60%; border: 1px solid rgba(255, 255, 255, 0.3);">
+                            <img src="{{ asset('bigc.jpg') }}" alt="Big-c" width="70" style="border-radius: 15%; margin-bottom: 10px;">
+                            <!-- English Description -->
+                            <p style="font-size: 16px; color: #333;">
+                                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; The Commission Big-c program is developed by Hi-Fi Orient Thai Co. Ltd. It is used to manage sales data and commissions under the company’s rules and regulations. Call 02-954-5281 
+                            </p>
+
+                            <br>
+                            <hr>
+                            <br>
+                            <!-- Thai Description -->
+                            <p style="font-size: 16px; color: #333;">
+                                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; โปรแกรม Commission Big-c นี้จัดทำขึ้นโดย บริษัทไฮไฟ โอเรียนท์ไทย จำกัด ใช้ในการบริหารจัดการข้อมูลการขายและค่าคอมมิชชั่นของบริษัท ภายใต้กฏเกณฑ์เงื่อนไขที่บริษัทกำหนด โทร 02-954-5281 
+                            </p>
+                            <br><br><br><br><br><br><br><br><br><br><br><br><br>
+                        </div>
                     </main>
+                    
 
                     <footer class="py-16 text-center text-sm text-black dark:text-white/70">
                         Laravel v{{ Illuminate\Foundation\Application::VERSION }} (PHP v{{ PHP_VERSION }}) By Noppadol.s
