@@ -20,7 +20,7 @@ return new class extends Migration
             $table->decimal('achieve', 15, 2);
             $table->decimal('base_com', 15, 2);
             $table->decimal('com_sale', 15, 2);
-
+            $table->decimal('add_total', 15, 2)->nullable();
             $table->decimal('sale_tv', 15, 2);
             $table->decimal('unit_tv', 15, 2);
             $table->decimal('sale_av', 15, 2);
