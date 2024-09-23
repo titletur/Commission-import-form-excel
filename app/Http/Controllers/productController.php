@@ -20,7 +20,7 @@ class productController extends Controller
         // return view('stores.index', compact('stores'));
         $editMode = DB::table('tb_disable_product')->value('edit_mode');
         $products = product::whereNull('status_product')
-                        ->orderBy('id', 'DESC')
+                        ->orderBy('type_product', 'DESC')
                         ->get();
         return view('product.index', compact('products', 'editMode'));
         
@@ -116,18 +116,18 @@ class productController extends Controller
         $type = $request->input('type');
 
         $products = product::whereNull('status_product')
-                        ->orderBy('id', 'DESC')
+                        ->orderBy('type_product', 'DESC')
                         ->get();
 
         if ($type === 'excel') {
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
-        $sheet->setTitle('Stores List');
+        $sheet->setTitle('Product List');
 
         // กำหนดหัวข้อของตาราง
         $header = [
             'ID', 'Supplier Code', 'Division', 'Department', 'Subdepartment','Pro Class','Sub Pro Class'
-            ,'Barcode','Article','Article Name','Brand','Model','Type Product','Price','Price(vat)','Com'
+            ,'Barcode','Article','Article Name','Model','Type Product','Price','Price(vat)','Com'
         ];
 
         // ตั้งค่า header
@@ -142,12 +142,12 @@ class productController extends Controller
         $sheet->getColumnDimension('H')->setWidth(20); 
         $sheet->getColumnDimension('I')->setWidth(10); 
         $sheet->getColumnDimension('J')->setWidth(20); 
-        $sheet->getColumnDimension('K')->setWidth(10); 
-        $sheet->getColumnDimension('L')->setWidth(15); 
+        // $sheet->getColumnDimension('K')->setWidth(10); 
+        $sheet->getColumnDimension('K')->setWidth(15); 
+        $sheet->getColumnDimension('L')->setWidth(10); 
         $sheet->getColumnDimension('M')->setWidth(10); 
         $sheet->getColumnDimension('N')->setWidth(10); 
         $sheet->getColumnDimension('O')->setWidth(10); 
-        $sheet->getColumnDimension('P')->setWidth(10); 
 
         // กรอกข้อมูล commissions
         $row = 2; // เริ่มที่แถวที่ 2 เนื่องจากแถวที่ 1 เป็นหัวข้อ
@@ -162,12 +162,12 @@ class productController extends Controller
             $sheet->setCellValue('H' . $row, $product->barcode);
             $sheet->setCellValue('I' . $row, $product->article);
             $sheet->setCellValue('J' . $row, $product->article_name);
-            $sheet->setCellValue('K' . $row, $product->brand);
-            $sheet->setCellValue('L' . $row, $product->pro_model);
-            $sheet->setCellValue('M' . $row, $product->type_product);
-            $sheet->setCellValue('N' . $row, $product->price);
-            $sheet->setCellValue('O' . $row, $product->price_vat);
-            $sheet->setCellValue('P' . $row, $product->com);
+            // $sheet->setCellValue('K' . $row, $product->brand);
+            $sheet->setCellValue('K' . $row, $product->pro_model);
+            $sheet->setCellValue('L' . $row, $product->type_product);
+            $sheet->setCellValue('M' . $row, $product->price);
+            $sheet->setCellValue('N' . $row, $product->price_vat);
+            $sheet->setCellValue('O' . $row, $product->com);
             $row++;
         }
 
