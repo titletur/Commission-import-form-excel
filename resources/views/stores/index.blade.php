@@ -62,7 +62,7 @@
             <thead>
                 <tr>
                     <th>ID</th>
-                    <th>Supplier Code</th>
+                    {{-- <th>Supplier Code</th> --}}
                     <th>Store ID</th>
                     <th>Store</th>
                     <th>Type Store</th>
@@ -70,10 +70,14 @@
                 </tr>
             </thead>
             <tbody>
+                @php
+                   $i = 1;  
+                @endphp 
                 @foreach($stores as $store)
                     <tr>
-                        <td>{{ $store->id }}</td>
-                        <td>{{ $store->suppliercode }}</td>
+                        {{-- <td> {{ $store->id }}</td> --}}
+                        <td>{{ $i++; }} </td>
+                        {{-- <td>{{ $store->suppliercode }}</td> --}}
                         <td>{{ $store->store_id }}</td>
                         <td>{{ $store->store }}</td>
                         <td>{{ $store->type_store }}</td>
