@@ -144,6 +144,7 @@ class CommissionController extends Controller
         $commissions = DB::table('tb_main_commission')
                         ->where('as_of_year', $year)
                         ->where('as_of_month', $month)
+                        ->orderBy('store_id')
                         ->get();
 
         $commissions_sale = DB::table('tb_commission_sale')
@@ -153,91 +154,40 @@ class CommissionController extends Controller
                         ->select('tb_commission_sale.*', 'tb_sale.name_sale', 'tb_sale.code_sale') // รวมข้อมูลจาก tb_commission_sale และ tb_sale
                         ->get();
        
+        $currentMonthName = DB::table('tb_month')
+                        ->where('var_month', $month)
+                        ->first();   
+
+        $previousMonth = $currentMonthName->id - 1;
+
+        // กรณีเดือนเป็น 1 (มกราคม) ต้องย้อนกลับไปเป็นเดือน 12 (ธันวาคม) และลดปีลง 1
+        if ($previousMonth < 1) {
+            $previousMonth = 12;
+            $year -= 1;
+        }
+        $previousMonth2 = $previousMonth - 1;
+        // Query ชื่อเดือน (เดือนปัจจุบัน)
+        
+        $previousMonthName1 = DB::table('tb_month')
+                            ->where('id', $previousMonth)
+                            ->first();
+
+        $previousMonthName2 = DB::table('tb_month')
+                            ->where('id', $previousMonth2)
+                            // ->value('short_en','var_month')  
+                            ->first();                         
 
         if ($type === 'excel') {
-                // // สร้าง Spreadsheet object
-                // $spreadsheet = new Spreadsheet();
-                // $sheet = $spreadsheet->getActiveSheet();
-        
-                // // เพิ่มข้อมูลลงในเซลล์
-                // $sheet->setCellValue('A1', 'Store');
-                // $sheet->setCellValue('B1', 'Type Store');
-                // $sheet->setCellValue('C1', 'PC');
-                // $sheet->setCellValue('D1', 'Type PC');
-                // $sheet->setCellValue('E1', 'Salary');
-                // $sheet->setCellValue('F1', 'Sale TV');
-                // $sheet->setCellValue('G1', 'QTY TV');
-                // $sheet->setCellValue('H1', 'Sale AV');
-                // $sheet->setCellValue('I1', 'QTY AV');
-                // $sheet->setCellValue('J1', 'Sale HA');
-                // $sheet->setCellValue('K1', 'QTY HA');
-                // $sheet->setCellValue('L1', 'Sale Total');
-                // $sheet->setCellValue('M1', 'Target');
-                // $sheet->setCellValue('N1', 'Achieve');
-                // $sheet->setCellValue('O1', 'Com TV');
-                // $sheet->setCellValue('P1', 'Com AV');
-                // $sheet->setCellValue('Q1', 'Com HA');
-                // $sheet->setCellValue('R1', 'Pay Com');
-                // $sheet->setCellValue('S1', 'Extra');
-                // $sheet->setCellValue('T1', 'Extra  HA');
-                // $sheet->setCellValue('U1', 'Net Com');
-                // $sheet->setCellValue('V1', 'Advance Pay');
-                // $sheet->setCellValue('W1', 'Net Pay');
-                // // ... เพิ่มข้อมูลหัวข้อที่เหลือ
-                // // เพิ่มข้อมูล commission ลงใน sheet
-                // $row = 2;
-                // foreach ($commissions as $commission) {
-                //     $sheet->setCellValue('A' . $row, $commission->store_id);
-                //     $sheet->setCellValue('B' . $row, $commission->type_store);
-                //     $sheet->setCellValue('C' . $row, $commission->name_pc);
-                //     $sheet->setCellValue('D' . $row, $commission->type_pc);
-                //     $sheet->setCellValue('E' . $row, number_format($commission->pc_salary,0) );
-                //     $sheet->setCellValue('F' . $row, number_format($commission->sale_tv,0) );
-                //     $sheet->setCellValue('G' . $row, number_format($commission->unit_tv,0));
-                //     $sheet->setCellValue('H' . $row, number_format($commission->sale_av,0));
-                //     $sheet->setCellValue('I' . $row, number_format($commission->unit_av,0));
-                //     $sheet->setCellValue('J' . $row, number_format($commission->sale_ha,0));
-                //     $sheet->setCellValue('K' . $row, number_format($commission->unit_ha,0));
-                //     $sheet->setCellValue('L' . $row, number_format($commission->sale_total,0));
-                //     $sheet->setCellValue('M' . $row, number_format($commission->tarket,0) );
-                //     $sheet->setCellValue('N' . $row, $commission->achieve .'%');
-                //     $sheet->setCellValue('O' . $row, number_format($commission->com_tv,0));
-                //     $sheet->setCellValue('P' . $row, number_format($commission->com_av,0));
-                //     $sheet->setCellValue('Q' . $row, number_format($commission->com_ha,0));
-                //     $sheet->setCellValue('R' . $row, number_format($commission->pay_com,0));
-                //     $sheet->setCellValue('S' . $row, number_format($commission->extra_tv,0));
-                //     $sheet->setCellValue('T' . $row, number_format($commission->extra_ha,0));
-                //     $sheet->setCellValue('U' . $row, number_format($commission->net_com,0));
-                //     $sheet->setCellValue('V' . $row, number_format($commission->advance_pay,0));
-                //     $sheet->setCellValue('W' . $row, number_format($commission->net_pay,0));
-
-                //     // ... เพิ่มข้อมูลที่เหลือ
-                //     $row++;
-
-                // }
-        
-                // // สร้าง Writer object เพื่อเขียนไฟล์
-                // $writer = new Xlsx($spreadsheet);
-        
-                // // กำหนดชื่อไฟล์
-                // $fileName = 'commissions_' . $month . '_' . $year . '.xlsx';
-        
-                // // ส่งออกไฟล์เป็น Response
-                // header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-                // header('Content-Disposition: attachment; filename="' . $fileName . '"');
-        
-                // $writer->save('php://output');
-                // exit;
-            // สร้าง Spreadsheet และ Sheet
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->setTitle('Commissions PC');
 
         // กำหนดหัวข้อของตาราง
         $header = [
-            'Store', 'Type Store', 'PC', 'Type PC', 'Salary', 'Sale TV', 'QTY TV', 'Sale AV', 'QTY AV', 
-            'Sale HA', 'QTY HA', 'Sale Total', 'Target', 'Achieve', 'Com TV', 'Com AV', 'Com HA', 
-            'Pay Com', 'Extra', 'Extra HA', 'Net Com', 'Advance', 'Net Pay'
+            'Store', 'Code' , 'PC', 'Type Store','Type PC',  'QTY TV','Sale TV',  'QTY AV', 'Sale AV',
+             'QTY HA','Sale HA', 'Sale Total', 'Target', 'TV+AV %', 'ComTV+AV', 'ComTV+AV', 'Com HA', 
+            'Pay Com', 'Extra TV+AV', 'Extra HA', 'Other' ,  'Net Com', 'Advance', 'Net Pay' , '% Com' ,
+            'salary' , ' '.$currentMonthName->short_en.'', ' '.$previousMonthName1->short_en.'', ' '.$previousMonthName2->short_en.'', 'Remark'
         ];
 
         // ตั้งค่า header
@@ -246,37 +196,70 @@ class CommissionController extends Controller
         // กรอกข้อมูล commissions
         $row = 2; // เริ่มที่แถวที่ 2 เนื่องจากแถวที่ 1 เป็นหัวข้อ
         foreach ($commissions as $commission) {
+            $pcs = DB::table('tb_pc')
+                        ->whereNull('status_pc')
+                        ->where('id', $commission->id_pc)
+                        ->first();
+
             $sheet->setCellValue('A' . $row, $commission->store_id);
-            $sheet->setCellValue('B' . $row, $commission->type_store);
+            $sheet->setCellValue('B' . $row, $pcs->code_pc);
             $sheet->setCellValue('C' . $row, $commission->name_pc);
-            $sheet->setCellValue('D' . $row, $commission->type_pc);
-            $sheet->setCellValue('E' . $row, $commission->pc_salary);
-            $sheet->setCellValue('F' . $row, $commission->sale_tv);
-            $sheet->setCellValue('G' . $row, $commission->unit_tv);
-            $sheet->setCellValue('H' . $row, $commission->sale_av);
-            $sheet->setCellValue('I' . $row, $commission->unit_av);
-            $sheet->setCellValue('J' . $row, $commission->sale_ha);
-            $sheet->setCellValue('K' . $row, $commission->unit_ha);
+            $sheet->setCellValue('D' . $row, $commission->type_store);
+            $sheet->setCellValue('E' . $row, $commission->type_pc);
+            $sheet->setCellValue('F' . $row, $commission->unit_tv)->getStyle('F2:M' . $row)->getNumberFormat()->setFormatCode(\PhpOffice\PhpSpreadsheet\Style\NumberFormat::FORMAT_NUMBER);
+            $sheet->setCellValue('G' . $row, $commission->sale_tv);
+            $sheet->setCellValue('H' . $row, $commission->unit_av);
+            $sheet->setCellValue('I' . $row, $commission->sale_av);
+            $sheet->setCellValue('K' . $row, $commission->sale_ha);
             $sheet->setCellValue('L' . $row, $commission->sale_total);
             $sheet->setCellValue('M' . $row, $commission->tarket);
-            $sheet->setCellValue('N' . $row, $commission->achieve );
-            $sheet->setCellValue('O' . $row, $commission->com_tv);
-            $sheet->setCellValue('P' . $row, $commission->com_av);
+            $sheet->setCellValue('N' . $row, $commission->achieve / 100)->getStyle('N2:N' . $row)->getNumberFormat()->setFormatCode(\PhpOffice\PhpSpreadsheet\Style\NumberFormat::FORMAT_PERCENTAGE_00);
+
+            $sheet->setCellValue('O' . $row, $commission->normalcom_tv + $commission->normalcom_av )->getStyle('O2:X' . $row)->getNumberFormat()->setFormatCode(\PhpOffice\PhpSpreadsheet\Style\NumberFormat::FORMAT_NUMBER);
+            $sheet->setCellValue('P' . $row, $commission->com_tv + $commission->com_av);
             $sheet->setCellValue('Q' . $row, $commission->com_ha);
             $sheet->setCellValue('R' . $row, $commission->pay_com);
             $sheet->setCellValue('S' . $row, $commission->extra_tv);
             $sheet->setCellValue('T' . $row, $commission->extra_ha);
-            $sheet->setCellValue('U' . $row, $commission->net_com);
-            $sheet->setCellValue('V' . $row, $commission->advance_pay);
-            $sheet->setCellValue('W' . $row, $commission->net_pay);
+            $sheet->setCellValue('U' . $row, $commission->other);
+            $sheet->setCellValue('V' . $row, $commission->net_com);
+            $sheet->setCellValue('W' . $row, $commission->advance_pay);
+            $sheet->setCellValue('X' . $row, $commission->net_pay);
+            $sheet->setCellValue('Y' . $row, $commission->dis_pay / 100)->getStyle('Y2:Y' . $row)->getNumberFormat()->setFormatCode(\PhpOffice\PhpSpreadsheet\Style\NumberFormat::FORMAT_PERCENTAGE_00);
+            $sheet->setCellValue('Z' . $row, $commission->pc_salary)->getStyle('Z2:Z' . $row)->getNumberFormat()->setFormatCode(\PhpOffice\PhpSpreadsheet\Style\NumberFormat::FORMAT_NUMBER);
+            
+            $commissions_previous1 = DB::table('tb_main_commission')
+                        ->where('as_of_year', $year)
+                        ->where('as_of_month', $previousMonthName1->var_month)
+                        ->where('id_pc', $commission->id_pc)
+                        ->first();
+                        $net_com1 = optional($commissions_previous1)->net_com ?? 0;
+                        $pc_salary1 = optional($commissions_previous1)->pc_salary ?? 0;
+                        $sale_total1 = optional($commissions_previous1)->sale_total ?? 0;
+                        
+                        
+// หากต้องการค่าอื่น ๆ ก็สามารถทำซ้ำได้สำหรับการ query อื่น ๆ
+            $commissions_previous2 = DB::table('tb_main_commission')
+                        ->where('as_of_year', $year)
+                        ->where('as_of_month', $previousMonthName2->var_month)
+                        ->where('id_pc', $commission->id_pc)
+                        ->first();
+                        $net_com2 = optional($commissions_previous2)->net_com ?? 0;
+                        $pc_salary2 = optional($commissions_previous2)->pc_salary ?? 0;
+                        $sale_total2 = optional($commissions_previous2)->sale_total ?? 0;
+            
+            $sheet->setCellValue('AA' . $row, '=IFERROR((V'.$row.' + Z'.$row.') / L'.$row.',0)')->getStyle('AA2:AC' . $row)->getNumberFormat()->setFormatCode(\PhpOffice\PhpSpreadsheet\Style\NumberFormat::FORMAT_PERCENTAGE_00);
+            $sheet->setCellValue('AB' . $row, '=IFERROR((' . $net_com1 . ' + ' . $pc_salary1 . ') / ' . $sale_total1 . ',0)');
+            $sheet->setCellValue('AC' . $row, '=IFERROR((' . $net_com2 . ' + ' . $pc_salary2 . ') / ' . $sale_total2 . ',0)');
+
+            $sheet->setCellValue('AD' . $row, $commission->remark);
             $row++;
         }
 
         // เพิ่มแถวผลรวม (Sum Total)
         $sheet->setCellValue('A' . $row, 'Total');
-        $sheet->mergeCells("A$row:D$row"); // รวมเซลล์ A ถึง D
-        $sheet->setCellValue('E' . $row, '=SUM(E2:E' . ($row - 1) . ')');
-        $sheet->setCellValue('F' . $row, '=SUM(F2:F' . ($row - 1) . ')');
+        $sheet->mergeCells("A$row:E$row"); // รวมเซลล์ A ถึง D
+        $sheet->setCellValue('F' . $row, '=SUM(F2:F' . ($row - 1) . ')')->getStyle('F2:M' . $row)->getNumberFormat()->setFormatCode(\PhpOffice\PhpSpreadsheet\Style\NumberFormat::FORMAT_NUMBER);
         $sheet->setCellValue('G' . $row, '=SUM(G2:G' . ($row - 1) . ')');
         $sheet->setCellValue('H' . $row, '=SUM(H2:H' . ($row - 1) . ')');
         $sheet->setCellValue('I' . $row, '=SUM(I2:I' . ($row - 1) . ')');
@@ -284,8 +267,8 @@ class CommissionController extends Controller
         $sheet->setCellValue('K' . $row, '=SUM(K2:K' . ($row - 1) . ')');
         $sheet->setCellValue('L' . $row, '=SUM(L2:L' . ($row - 1) . ')');
         $sheet->setCellValue('M' . $row, '=SUM(M2:M' . ($row - 1) . ')');
-        $sheet->setCellValue('N' . $row, '=AVERAGE(N2:N' . ($row - 1) . ')');
-        $sheet->setCellValue('O' . $row, '=SUM(O2:O' . ($row - 1) . ')');
+        $sheet->setCellValue('N' . $row, '=AVERAGE(N2:N' . ($row - 1) . ')')->getStyle('N2:N' . $row)->getNumberFormat()->setFormatCode(\PhpOffice\PhpSpreadsheet\Style\NumberFormat::FORMAT_PERCENTAGE_00);
+        $sheet->setCellValue('O' . $row, '=SUM(O2:O' . ($row - 1) . ')')->getStyle('O2:X' . $row)->getNumberFormat()->setFormatCode(\PhpOffice\PhpSpreadsheet\Style\NumberFormat::FORMAT_NUMBER);
         $sheet->setCellValue('P' . $row, '=SUM(P2:P' . ($row - 1) . ')');
         $sheet->setCellValue('Q' . $row, '=SUM(Q2:Q' . ($row - 1) . ')');
         $sheet->setCellValue('R' . $row, '=SUM(R2:R' . ($row - 1) . ')');
@@ -294,6 +277,9 @@ class CommissionController extends Controller
         $sheet->setCellValue('U' . $row, '=SUM(U2:U' . ($row - 1) . ')');
         $sheet->setCellValue('V' . $row, '=SUM(V2:V' . ($row - 1) . ')');
         $sheet->setCellValue('W' . $row, '=SUM(W2:W' . ($row - 1) . ')');
+        $sheet->setCellValue('X' . $row, '=SUM(W2:W' . ($row - 1) . ')');
+        $sheet->setCellValue('Y' . $row, '=AVERAGE(Y2:Y' . ($row - 1) . ')')->getStyle('Y2:Y' . $row)->getNumberFormat()->setFormatCode(\PhpOffice\PhpSpreadsheet\Style\NumberFormat::FORMAT_PERCENTAGE_00);
+        $sheet->setCellValue('Z' . $row, '=SUM(W2:W' . ($row - 1) . ')')->getStyle('Z2:Z' . $row)->getNumberFormat()->setFormatCode(\PhpOffice\PhpSpreadsheet\Style\NumberFormat::FORMAT_NUMBER);
 
         // เพิ่ม sheet ใหม่สำหรับ Commissions Sale
         $sheetSale = $spreadsheet->createSheet();
@@ -313,7 +299,7 @@ class CommissionController extends Controller
             $sheetSale->setCellValue('A' . $rowSale, $commissionSale->id);
             $sheetSale->setCellValue('B' . $rowSale, $commissionSale->code_sale);
             $sheetSale->setCellValue('C' . $rowSale, $commissionSale->name_sale);
-            $sheetSale->setCellValue('D' . $rowSale, $commissionSale->target);
+            $sheetSale->setCellValue('D' . $rowSale, $commissionSale->target)->getStyle('D'.$rowSale.':K' . $rowSale)->getNumberFormat()->setFormatCode(\PhpOffice\PhpSpreadsheet\Style\NumberFormat::FORMAT_NUMBER);
             $sheetSale->setCellValue('E' . $rowSale, $commissionSale->sale_out);
             $sheetSale->setCellValue('F' . $rowSale, $commissionSale->sale_tv);
             $sheetSale->setCellValue('G' . $rowSale, $commissionSale->sale_av);
@@ -321,8 +307,8 @@ class CommissionController extends Controller
             $sheetSale->setCellValue('I' . $rowSale, $commissionSale->unit_tv);
             $sheetSale->setCellValue('J' . $rowSale, $commissionSale->unit_av);
             $sheetSale->setCellValue('K' . $rowSale, $commissionSale->unit_ha);
-            $sheetSale->setCellValue('L' . $rowSale, $commissionSale->achieve);
-            $sheetSale->setCellValue('M' . $rowSale, $commissionSale->base_com);
+            $sheetSale->setCellValue('L' . $rowSale, $commissionSale->achieve / 100)->getStyle('L2:L' . $rowSale)->getNumberFormat()->setFormatCode(\PhpOffice\PhpSpreadsheet\Style\NumberFormat::FORMAT_PERCENTAGE_00);
+            $sheetSale->setCellValue('M' . $rowSale, $commissionSale->base_com)->getStyle('M'.$rowSale.':S' . $rowSale)->getNumberFormat()->setFormatCode(\PhpOffice\PhpSpreadsheet\Style\NumberFormat::FORMAT_NUMBER);
             $sheetSale->setCellValue('N' . $rowSale, $commissionSale->com_sale);
             $sheetSale->setCellValue('O' . $rowSale, $commissionSale->extra_sale_out);
             $sheetSale->setCellValue('P' . $rowSale, $commissionSale->extra_unit);
@@ -336,7 +322,7 @@ class CommissionController extends Controller
         // เพิ่มแถวผลรวม (Sum Total) สำหรับ Commissions Sale
         $sheetSale->setCellValue('A' . $rowSale, 'Sum Total');
         $sheetSale->mergeCells("A$rowSale:C$rowSale"); // รวมเซลล์ A ถึง C
-        $sheetSale->setCellValue('D' . $rowSale, '=SUM(D2:D' . ($rowSale - 1) . ')');
+        $sheetSale->setCellValue('D' . $rowSale, '=SUM(D2:D' . ($rowSale - 1) . ')')->getStyle('D'.$rowSale.':K' . $rowSale)->getNumberFormat()->setFormatCode(\PhpOffice\PhpSpreadsheet\Style\NumberFormat::FORMAT_NUMBER);
         $sheetSale->setCellValue('E' . $rowSale, '=SUM(E2:E' . ($rowSale - 1) . ')');
         $sheetSale->setCellValue('F' . $rowSale, '=SUM(F2:F' . ($rowSale - 1) . ')');
         $sheetSale->setCellValue('G' . $rowSale, '=SUM(G2:G' . ($rowSale - 1) . ')');
@@ -344,8 +330,8 @@ class CommissionController extends Controller
         $sheetSale->setCellValue('I' . $rowSale, '=SUM(I2:I' . ($rowSale - 1) . ')');
         $sheetSale->setCellValue('J' . $rowSale, '=SUM(J2:J' . ($rowSale - 1) . ')');
         $sheetSale->setCellValue('K' . $rowSale, '=SUM(K2:K' . ($rowSale - 1) . ')');
-        $sheetSale->setCellValue('L' . $rowSale, '=AVERAGE(L2:L' . ($rowSale - 1) . ')');
-        $sheetSale->setCellValue('M' . $rowSale, '=SUM(M2:M' . ($rowSale - 1) . ')');
+        $sheetSale->setCellValue('L' . $rowSale, '=AVERAGE(L2:L' . ($rowSale - 1) . ')')->getStyle('L2:L' . $rowSale)->getNumberFormat()->setFormatCode(\PhpOffice\PhpSpreadsheet\Style\NumberFormat::FORMAT_PERCENTAGE_00);
+        $sheetSale->setCellValue('M' . $rowSale, '=SUM(M2:M' . ($rowSale - 1) . ')')->getStyle('M'.$rowSale.':S' . $rowSale)->getNumberFormat()->setFormatCode(\PhpOffice\PhpSpreadsheet\Style\NumberFormat::FORMAT_NUMBER);
         $sheetSale->setCellValue('N' . $rowSale, '=SUM(N2:N' . ($rowSale - 1) . ')');
         $sheetSale->setCellValue('O' . $rowSale, '=SUM(O2:O' . ($rowSale - 1) . ')');
         $sheetSale->setCellValue('P' . $rowSale, '=SUM(P2:P' . ($rowSale - 1) . ')');
@@ -353,8 +339,72 @@ class CommissionController extends Controller
         $sheetSale->setCellValue('R' . $rowSale, '=SUM(R2:R' . ($rowSale - 1) . ')');
         $sheetSale->setCellValue('S' . $rowSale, '=SUM(S2:S' . ($rowSale - 1) . ')');
 
-
+        $rowSale = $rowSale + 3 ;
         // ... เพิ่มการคำนวณ Sum Total สำหรับคอลัมน์อื่น ๆ ตามที่ต้องการ
+        $sheetSale->setCellValue('C' . $rowSale, '');
+        $sheetSale->setCellValue('D' . $rowSale, 'Net Sale In');
+        $sheetSale->setCellValue('E' . $rowSale, 'Sale Out');
+        $rowSale++;
+        $query_total_sum = DB::table('tb_main_commission')
+        ->select(
+            DB::raw('SUM(sale_total) as total_sale'), 
+        )
+        ->where('as_of_year', $year)
+        ->where('as_of_month', $month)
+        ->first();
+        $sheetSale->setCellValue('C' . $rowSale, $currentMonthName->short_en);
+        $sheetSale->setCellValue('D' . $rowSale, '');
+        $sheetSale->setCellValue('E' . $rowSale, $query_total_sum->total_sale);
+
+        $rowSale = $rowSale + 3 ;
+        // ... เพิ่มการคำนวณ Sum Total สำหรับคอลัมน์อื่น ๆ ตามที่ต้องการ
+        $sheetSale->setCellValue('C' . $rowSale, 'ประเภทพนักงาน');
+        $sheetSale->setCellValue('D' . $rowSale, 'Achieve');
+        $sheetSale->setCellValue('E' . $rowSale, 'Com');
+        $sheetSale->setCellValue('F' . $rowSale, '% Com');
+        $sheetSale->setCellValue('G' . $rowSale, 'จำนวนคน');
+        
+        $query_type_pc = DB::table('tb_main_commission')
+        ->select(
+            'type_pc', 
+            DB::raw('SUM(sale_total) as total_sale'), 
+            DB::raw('SUM(net_com) as total_com'), 
+            DB::raw('COUNT(id_pc) as count_pc')
+        )
+        ->where('as_of_year', $year)
+        ->where('as_of_month', $month)
+        ->groupBy('type_pc')
+        ->get();
+
+        $sumSaleTotal = 0;
+        $sumCom = 0;
+        $sumCountPc = 0;
+        $rowSale++;
+        
+        foreach ($query_type_pc as $data) {
+            $achieve = $data->total_sale;  
+            $com = $data->total_com;      
+            $countPc = $data->count_pc;    
+            $percentCom = ($achieve != 0) ? ($com / $achieve) * 100 : 0; // % ค่าคอมมิชชั่น
+        
+            $sheetSale->setCellValue('C' . $rowSale, $data->type_pc); 
+            $sheetSale->setCellValue('D' . $rowSale, $achieve);       
+            $sheetSale->setCellValue('E' . $rowSale, $com);         
+            $sheetSale->setCellValue('F' . $rowSale, $percentCom /100)->getStyle('F'.$rowSale.':F' . $rowSale)->getNumberFormat()->setFormatCode(\PhpOffice\PhpSpreadsheet\Style\NumberFormat::FORMAT_PERCENTAGE_00);    
+            $sheetSale->setCellValue('G' . $rowSale, $countPc);       
+            
+            $sumSaleTotal += $achieve;
+            $sumCom += $com;
+            $sumCountPc += $countPc;
+            $rowSale++; // เพิ่มแถวสำหรับการวนลูปถัดไป
+        }
+        $sumpercentCom = ($sumSaleTotal != 0) ? ($sumCom / $sumSaleTotal) * 100 : 0; // % ค่าคอมมิชชั่น
+        
+        $sheetSale->setCellValue('C' . $rowSale, 'Total');  
+        $sheetSale->setCellValue('D' . $rowSale, $sumSaleTotal);  
+        $sheetSale->setCellValue('E' . $rowSale, $sumCom);   
+        $sheetSale->setCellValue('F' . $rowSale, $sumpercentCom/100)->getStyle('F'.$rowSale.':F' . $rowSale)->getNumberFormat()->setFormatCode(\PhpOffice\PhpSpreadsheet\Style\NumberFormat::FORMAT_PERCENTAGE_00);        
+        $sheetSale->setCellValue('G' . $rowSale, $sumCountPc); 
 
         // จัดการ download ไฟล์
         $filename = "Commissions_{$month}_{$year}.xlsx";
@@ -803,9 +853,9 @@ class CommissionController extends Controller
                                     break;
                                 case 'C':
                                     if ($data->achieve >= 120) {
-                                        $data->extra_tv = 3000;
-                                    } elseif ($data->achieve >= 100) {
                                         $data->extra_tv = 2000;
+                                    } elseif ($data->achieve >= 100) {
+                                        $data->extra_tv = 1000;
                                     } else {
                                         $data->extra_tv = 0;
                                     }
@@ -916,7 +966,7 @@ class CommissionController extends Controller
                     //คำนวณ dis_pay
                     // $data->dis_pay = $data->pay_com / $data->net_com;
                     if ($data->net_com != 0) {
-                        $data->dis_pay = $data->pay_com / $data->net_com;
+                        $data->dis_pay = $data->net_com / $sale_total;
                     } else {
                         // กำหนดค่า $data->dis_pay เป็นค่าอื่นที่คุณต้องการในกรณีที่ net_com เป็น 0
                         $data->dis_pay = 0; // หรืออาจจะเป็นค่าที่เหมาะสมกับ logic ของคุณ
@@ -1138,9 +1188,9 @@ class CommissionController extends Controller
                                         break;
                                     case 'C':
                                         if ($data->achieve >= 120) {
-                                            $data->extra_tv = 3000;
-                                        } elseif ($data->achieve >= 100) {
                                             $data->extra_tv = 2000;
+                                        } elseif ($data->achieve >= 100) {
+                                            $data->extra_tv = 1000;
                                         } else {
                                             $data->extra_tv = 0;
                                         }
@@ -1248,7 +1298,7 @@ class CommissionController extends Controller
                         //คำนวณ dis_pay
                         // $data->dis_pay = $data->pay_com / $data->net_com;
                         if ($data->net_com != 0) {
-                            $data->dis_pay = $data->pay_com / $data->net_com;
+                            $data->dis_pay = $data->net_com / $sale_total;
                         } else {
                             // กำหนดค่า $data->dis_pay เป็นค่าอื่นที่คุณต้องการในกรณีที่ net_com เป็น 0
                             $data->dis_pay = 0; // หรืออาจจะเป็นค่าที่เหมาะสมกับ logic ของคุณ
