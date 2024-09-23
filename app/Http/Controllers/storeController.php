@@ -18,7 +18,7 @@ class StoreController extends Controller
         // return view('stores.index', compact('stores'));
 
         $stores = tb_store::whereNull('status_store')
-                        ->orderBy('id', 'DESC')
+                        ->orderBy('store_id')
                         ->get();
         return view('stores.index', compact('stores'));
         
@@ -82,7 +82,7 @@ class StoreController extends Controller
         $type = $request->input('type');
 
         $stores = tb_store::whereNull('status_store')
-        ->orderBy('id', 'DESC')
+        ->orderBy('store_id')
         ->get();
 
 
