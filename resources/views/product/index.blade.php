@@ -85,7 +85,7 @@
                     <th>Barcode</th>
                     <th>Article</th>
                     <th>Article Name</th>
-                    <th>Brand</th>
+                    {{-- <th>Brand</th> --}}
                     <th>Model</th>
                     <th>Type Product</th>
                     <th>Price</th>
@@ -95,9 +95,13 @@
                 </tr>
             </thead>
             <tbody>
+                @php
+                    $i = 1;
+                @endphp
                 @foreach($products as $product)
                     <tr>
-                        <td>{{ $product->id }}</td>
+                        {{-- <td>{{ $product->id }}</td> --}}
+                        <td>{{ $i++; }}</td>
                         <td>{{ $product->suppliercode }}</td>
                         <td>{{ $product->division }}</td>
                         <td>{{ $product->department }}</td>
@@ -107,7 +111,7 @@
                         <td>{{ $product->barcode }}</td>
                         <td>{{ $product->article }}</td>
                         <td>{{ $product->article_name }}</td>
-                        <td>{{ $product->brand }}</td>
+                        {{-- <td>{{ $product->brand }}</td> --}}
                         <td>{{ $product->pro_model }}</td>
                         <td>{{ $product->type_product }}</td>
                         <td>{{ $product->price }}</td>
