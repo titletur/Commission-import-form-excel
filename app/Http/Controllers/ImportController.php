@@ -475,9 +475,9 @@ class ImportController extends Controller
                                 break;
                             case 'C':
                                 if ($data->achieve >= 120) {
-                                    $data->extra_tv = 3000;
-                                } elseif ($data->achieve >= 100) {
                                     $data->extra_tv = 2000;
+                                } elseif ($data->achieve >= 100) {
+                                    $data->extra_tv = 1000;
                                 } else {
                                     $data->extra_tv = 0;
                                 }
@@ -585,7 +585,7 @@ class ImportController extends Controller
                 //คำนวณ dis_pay
                 // $data->dis_pay = $data->pay_com / $data->net_com;
                 if ($data->net_com != 0) {
-                    $data->dis_pay = $data->pay_com / $data->net_com;
+                    $data->dis_pay = $data->net_com / $sale_total;
                 } else {
                     // กำหนดค่า $data->dis_pay เป็นค่าอื่นที่คุณต้องการในกรณีที่ net_com เป็น 0
                     $data->dis_pay = 0; // หรืออาจจะเป็นค่าที่เหมาะสมกับ logic ของคุณ
