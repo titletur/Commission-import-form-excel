@@ -19,7 +19,7 @@ class pcController extends Controller
         // return view('stores.index', compact('stores'));
 
         $pcs = tb_pc::whereNull('status_pc')
-                        ->orderBy('id', 'DESC')
+                        ->orderBy('store_id')
                         ->get();
         return view('pc.index', compact('pcs'));
         
@@ -114,7 +114,7 @@ class pcController extends Controller
         $type = $request->input('type');
 
         $pcs = tb_pc::whereNull('status_pc')
-                        ->orderBy('id', 'DESC')
+                        ->orderBy('store_id')
                         ->get();
 
 
