@@ -11,6 +11,7 @@ use App\Models\tb_pc;
 use App\Models\tb_month;
 use App\Models\tb_sale;
 use App\Models\tb_sub_sale;
+use App\Models\Sale_in;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
@@ -36,7 +37,8 @@ class CommissionController extends Controller
                 'month' => $month->short_en,
                 'var_month' => $month->var_month,
                 'var_year' => $year,
-                'sale_in' => main_commission::where('as_of_month', $month->var_month)->where('as_of_year', $year)->sum('sale_total'),
+                'sale_in' => Sale_in::where('month', $month->var_month)->where('year', $year)->sum('sale_in'),
+                'sale_out' => main_commission::where('as_of_month', $month->var_month)->where('as_of_year', $year)->sum('sale_total'),
                 'pay_com' => main_commission::where('as_of_month', $month->var_month)->where('as_of_year', $year)->sum('net_pay'),
                 'target_link' => route('editTarget', [ 'year' => $year, 'month' => $month->short_en , 'var_month' => $month->var_month]), 
                 'import_link' => route('import', ['year' => $year, 'month' => $month->short_en , 'var_month' => $month->var_month]),
@@ -132,6 +134,21 @@ class CommissionController extends Controller
         );
 
         return redirect()->back()->with('success', 'Status updated successfully!');
+    }
+    public function sale_in(Request $request)
+    {
+        $validatedData = $request->validate([
+            'month' => 'required|string',
+            'year' => 'required|string',
+            'sale_in' => 'required|numeric',
+        ]);
+
+        Sale_in::updateOrCreate(
+            ['month' => $validatedData['month'], 'year' => $validatedData['year']],
+            ['sale_in' => $validatedData['sale_in']]
+        );
+
+        return redirect()->back()->with('success', 'Sale In saved successfully!');
     }
     public function export(Request $request)
     {
@@ -352,9 +369,49 @@ class CommissionController extends Controller
         ->where('as_of_year', $year)
         ->where('as_of_month', $month)
         ->first();
+        $query_sale_in_sum = DB::table('sales_in')
+        ->select(
+            DB::raw('SUM(sale_in) as sale_in'), 
+        )
+        ->where('year', $year)
+        ->where('month', $month)
+        ->first();
         $sheetSale->setCellValue('C' . $rowSale, $currentMonthName->short_en);
-        $sheetSale->setCellValue('D' . $rowSale, '');
+        $sheetSale->setCellValue('D' . $rowSale, $query_sale_in_sum->sale_in);
         $sheetSale->setCellValue('E' . $rowSale, $query_total_sum->total_sale);
+
+        $query_total_sum_year = DB::table('tb_main_commission')
+                    ->select(DB::raw('SUM(sale_total) as total_sale'))
+                    ->where(function($query) use ($year) {
+                        $query->where(function($query) use ($year) {
+                            // ช่วงเดือน 04 ถึง 12 ของปีปัจจุบัน
+                            $query->where('as_of_year', $year)
+                                ->whereBetween('as_of_month', [4, 12]);
+                        })->orWhere(function($query) use ($year) {
+                            // ช่วงเดือน 01 ถึง 03 ของปีถัดไป
+                            $query->where('as_of_year', $year + 1)
+                                ->whereBetween('as_of_month', [1, 3]);
+                        });
+                    })
+                    ->first();
+        $query_sale_in_sum_year = DB::table('sales_in')
+                    ->select(DB::raw('SUM(sale_in) as sale_in_total'))
+                    ->where(function($query) use ($year) {
+                        $query->where(function($query) use ($year) {
+                            // ช่วงเดือน 04 ถึง 12 ของปีปัจจุบัน
+                            $query->where('year', $year)
+                                  ->whereBetween('month', [4, 12]);
+                        })->orWhere(function($query) use ($year) {
+                            // ช่วงเดือน 01 ถึง 03 ของปีถัดไป
+                            $query->where('year', $year + 1)
+                                  ->whereBetween('month', [1, 3]);
+                        });
+                    })
+                    ->first();
+                    $rowSale++;
+                $sheetSale->setCellValue('C' . $rowSale, 'Sum All'.$year.' ');
+                $sheetSale->setCellValue('D' . $rowSale, $query_sale_in_sum_year->sale_in_total);
+                $sheetSale->setCellValue('E' . $rowSale, $query_total_sum_year->total_sale);
 
         $rowSale = $rowSale + 3 ;
         // ... เพิ่มการคำนวณ Sum Total สำหรับคอลัมน์อื่น ๆ ตามที่ต้องการ
@@ -388,7 +445,7 @@ class CommissionController extends Controller
             $percentCom = ($achieve != 0) ? ($com / $achieve) * 100 : 0; // % ค่าคอมมิชชั่น
         
             $sheetSale->setCellValue('C' . $rowSale, $data->type_pc); 
-            $sheetSale->setCellValue('D' . $rowSale, $achieve);       
+            $sheetSale->setCellValue('D' . $rowSale, $achieve)->getStyle('D'.$rowSale.':E' . $rowSale)->getNumberFormat()->setFormatCode(\PhpOffice\PhpSpreadsheet\Style\NumberFormat::FORMAT_NUMBER);       
             $sheetSale->setCellValue('E' . $rowSale, $com);         
             $sheetSale->setCellValue('F' . $rowSale, $percentCom /100)->getStyle('F'.$rowSale.':F' . $rowSale)->getNumberFormat()->setFormatCode(\PhpOffice\PhpSpreadsheet\Style\NumberFormat::FORMAT_PERCENTAGE_00);    
             $sheetSale->setCellValue('G' . $rowSale, $countPc);       
@@ -425,14 +482,15 @@ class CommissionController extends Controller
             //     'fontCache' => public_path('fonts/cssfont'),
             //     'defaultFont' => 'Sarabun', // ใช้ฟอนต์ที่คุณมี
             // ]);
-            
+
             // return $pdf->stream('commissions_' . $month . '_' . $year . '.pdf');
             $mpdf = new Mpdf();
             
             $mpdf->AddPage('L'); // แนวนอน
             $mpdf->SetFont('freeserif', '', 12); // ตั้งฟอนต์ที่รองรับภาษาไทย
+            $mpdf->SetFooter('{PAGENO} / {nbpg}');
 
-            $html = view('commissions.commission_pdf', compact('commissions', 'month', 'year','show_month'))->render();
+            $html = view('commissions.commission_pdf', compact('commissions', 'commissions_sale' , 'month', 'year','show_month','currentMonthName','previousMonth' ,'previousMonth2','previousMonthName1','previousMonthName2'))->render();
             $mpdf->WriteHTML($html);
             $mpdf->Output('commissions_' . $month . '_' . $year . '.pdf', 'I');
             
@@ -488,12 +546,13 @@ class CommissionController extends Controller
                                 'type_product',
                                 'sale_amt',
                                 'sale_amt_vat',
+                                'com',
                                 DB::raw('SUM(sale_qty) as total_sale_qty')
                             )
                             ->where('store_id', $store_id)
                             ->where('as_of_month', $var_month)
                             ->where('as_of_year', $year)
-                            ->groupBy('pro_model', 'suppliercode', 'store_id',  'type_product','sale_amt','sale_amt_vat')
+                            ->groupBy('pro_model', 'suppliercode', 'store_id',  'type_product','sale_amt','sale_amt_vat','com')
                             ->get();
 
         // Query PC information in the store
@@ -1135,9 +1194,12 @@ class CommissionController extends Controller
                             ->where('id', $id_pc)
                             ->get();
                         $pc = $pcs->first();
-        
+                        $sale_tv_av = $data->sale_tv + $data->sale_av;
+                        if ($sale_tv_av != 0) {
                         $data->achieve = (($data->sale_tv + $data->sale_av) * 100) / $target;
-                    
+                        } else {
+                            $data->achieve = 0; // หรือใช้ค่าอื่นๆตามที่ต้องการ
+                        }
                         switch ($type_pc) {
                             case 'PC':
                                 if ($data->achieve >= 101) {
