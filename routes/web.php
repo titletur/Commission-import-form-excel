@@ -33,7 +33,7 @@ Route::middleware(['auth', CheckImportPermission::class])->group(function () {
 
     // Main page to display the year selection and data for 12 months
     Route::get('index', [CommissionController::class, 'index'])->name('commissions.index');
-
+    Route::post('/sales', [CommissionController::class, 'sale_in'])->name('sales_in.store');
     // Route for the import page, passing month and year as parameters
     Route::get('import/{year}/{month}/{var_month}', [ImportController::class, 'form'])->name('import');
     
