@@ -47,10 +47,11 @@
                 <tr>
                     <th width="10%">Month</th>
                     <th width="20%">Upload</th>
-                    <th width="15%">Sale Out</th>
-                    <th width="15%">Commission</th>
-                    <th width="20%">Target</th>
-                    <th width="20%">Status</th>
+                    <th width="13%">Sale In</th>
+                    <th width="13%">Sale Out</th>
+                    <th width="14%">Commission</th>
+                    <th width="15%">Target</th>
+                    <th width="15%">Status</th>
                 </tr>
             </thead>
             <tbody>
@@ -81,7 +82,18 @@
                             <img src="{{ asset('import.jpg') }}" width="17" height="17" alt="Import"> Upload
                             @endif
                         </td>
-                        <td>{{ number_format($data['sale_in'], 0) }}</td>
+                        <td>
+                            @if(in_array('sale_in', $permissions))
+                            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#saleInModal" data-month="{{ $data['var_month'] }}" data-year="{{ $data['var_year'] }}">
+                                {{ number_format($data['sale_in'], 0) }}
+                            </button>
+                            @else
+                            <button type="button" class="btn btn-primary">
+                                {{ number_format($data['sale_in'], 0) }}
+                            </button>
+                            @endif
+                        </td>
+                        <td>{{ number_format($data['sale_out'], 0) }}</td>
                         <td>{{ number_format($data['pay_com'], 0) }}</td>
                         <td>
                             @if(in_array('Edit_target', $permissions))
@@ -120,4 +132,42 @@
         </table>
     </div>
 
+    <div class="modal fade" id="saleInModal" tabindex="-1" role="dialog" aria-labelledby="saleInModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="saleInModalLabel">บันทึก Sale In</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form action="{{ route('sales_in.store') }}" method="POST">
+                    @csrf
+                    <div class="modal-body">
+                        <input type="hidden" name="month" id="modalMonth">
+                        <input type="hidden" name="year" id="modalYear">
+                        <div class="form-group">
+                            <label for="sale_in">Sale In</label>
+                            <input type="number" step="0.01" class="form-control" id="sale_in" name="sale_in" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">ปิด</button>
+                        <button type="submit" class="btn btn-primary">บันทึก</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <script>
+        $('#saleInModal').on('show.bs.modal', function (event) {
+            var button = $(event.relatedTarget); 
+            var month = button.data('month'); 
+            var year = button.data('year'); 
+    
+            var modal = $(this);
+            modal.find('#modalMonth').val(month);
+            modal.find('#modalYear').val(year);
+        });
+    </script>
 @endsection
