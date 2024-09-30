@@ -9,6 +9,7 @@ use App\Models\tb_commission_sale;
 use App\Models\tb_status;
 use App\Models\tb_pc;
 use App\Models\tb_month;
+use App\Models\product;
 use App\Models\tb_sale;
 use App\Models\tb_sub_sale;
 use App\Models\Sale_in;
@@ -1101,7 +1102,14 @@ class CommissionController extends Controller
         return view('edit_target', compact('pcs', 'year', 'month','var_month'));
     }
 
-
+    protected function calculateCom($pro_model)
+    {
+        // Example: Retrieve the commission from tb_product based on pro_model
+        $product = product::where('pro_model', $pro_model)
+                        ->whereNull('status_product') 
+                        ->first();
+        return $product ? $product->com : 0;
+    }
     public function updateTarget(Request $request)
     {
         // dd($request->all());
@@ -1109,8 +1117,31 @@ class CommissionController extends Controller
         $type_pcs = $request->input('type_pc');
         $var_month = $request->input('var_month');
         $year = $request->input('year');
-
+        
         try{
+
+            $pro_commissions = DB::table('tb_commission')
+            ->select('pro_model') // เลือกเฉพาะ pro_model
+            ->where('as_of_month', $var_month)
+            ->where('as_of_year', $year)
+            ->distinct() // ใช้ distinct เพื่อลดการซ้ำของ pro_model
+            ->get();
+        
+        foreach ($pro_commissions as $row_pro) {
+            // คำนวณค่า com สำหรับแต่ละ pro_model
+            
+            $com = $this->calculateCom($row_pro->pro_model);
+
+            $affectedRows = DB::table('tb_commission')
+            ->where('as_of_month', $var_month)
+            ->where('as_of_year', $year)
+            ->where('pro_model', $row_pro->pro_model)
+            ->update([
+                'com' => $com,
+            ]);
+            // dd($affectedRows);
+        }
+        /////////////////////////////
         foreach ($targets as $id_pc  => $target) {
             $target = str_replace(',', '', $target);
             $type_pc = $type_pcs[$id_pc];
