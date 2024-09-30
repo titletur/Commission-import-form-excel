@@ -80,6 +80,7 @@ $permissions = json_decode(Auth::user()->permissions, true); // แปลง JSO
                         <th>Type Product</th>
                         <th>Sale Amount</th>
                         <th>Sale Amount (VAT)</th>
+                        <th>Price Com</th>
                         <th>Total Sale Quantity</th>
                         @foreach($pcs as $pc)
                             <th>{{ $pc->name_pc }}</th>
@@ -96,6 +97,7 @@ $permissions = json_decode(Auth::user()->permissions, true); // แปลง JSO
                             <td>{{ $commission->type_product }}</td>
                             <td>{{ number_format($commission->sale_amt, 0) }}</td>
                             <td>{{ number_format($commission->sale_amt_vat, 0) }}</td>
+                            <td>{{ number_format($commission->com, 0) }}</td>
                             <td>{{ number_format($commission->total_sale_qty, 0) }}</td>
                             @foreach($pcs as $pc)
                                 @php
@@ -144,7 +146,7 @@ $permissions = json_decode(Auth::user()->permissions, true); // แปลง JSO
         
                 saleQtyInputs.forEach(input => {
                     const row = input.closest('tr');
-                    const totalQty = parseFloat(row.querySelector('td:nth-child(7)').textContent.replace(',', '')) || 0;
+                    const totalQty = parseFloat(row.querySelector('td:nth-child(8)').textContent.replace(',', '')) || 0;
                     let sumQty = 0;
         
                     row.querySelectorAll('.sale-qty-input').forEach(input => {
