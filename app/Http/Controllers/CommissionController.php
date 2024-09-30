@@ -231,7 +231,7 @@ class CommissionController extends Controller
             $sheet->setCellValue('K' . $row, $commission->sale_ha);
             $sheet->setCellValue('L' . $row, $commission->sale_total);
             $sheet->setCellValue('M' . $row, $commission->tarket);
-            $sheet->setCellValue('N' . $row, $commission->achieve / 100)->getStyle('N2:N' . $row)->getNumberFormat()->setFormatCode(\PhpOffice\PhpSpreadsheet\Style\NumberFormat::FORMAT_PERCENTAGE_00);
+            $sheet->setCellValue('N' . $row, '=IFERROR((G'.$row.' + I'.$row.') / M'.$row.',0)' )->getStyle('N2:N' . $row)->getNumberFormat()->setFormatCode(\PhpOffice\PhpSpreadsheet\Style\NumberFormat::FORMAT_PERCENTAGE_00);
 
             $sheet->setCellValue('O' . $row, $commission->normalcom_tv + $commission->normalcom_av )->getStyle('O2:X' . $row)->getNumberFormat()->setFormatCode(\PhpOffice\PhpSpreadsheet\Style\NumberFormat::FORMAT_NUMBER);
             $sheet->setCellValue('P' . $row, $commission->com_tv + $commission->com_av);
@@ -243,7 +243,7 @@ class CommissionController extends Controller
             $sheet->setCellValue('V' . $row, $commission->net_com);
             $sheet->setCellValue('W' . $row, $commission->advance_pay);
             $sheet->setCellValue('X' . $row, $commission->net_pay);
-            $sheet->setCellValue('Y' . $row, $commission->dis_pay / 100)->getStyle('Y2:Y' . $row)->getNumberFormat()->setFormatCode(\PhpOffice\PhpSpreadsheet\Style\NumberFormat::FORMAT_PERCENTAGE_00);
+            $sheet->setCellValue('Y' . $row, '=IFERROR(V'.$row.' / L'.$row.',0)')->getStyle('Y2:Y' . $row)->getNumberFormat()->setFormatCode(\PhpOffice\PhpSpreadsheet\Style\NumberFormat::FORMAT_PERCENTAGE_00);
             $sheet->setCellValue('Z' . $row, $commission->pc_salary)->getStyle('Z2:Z' . $row)->getNumberFormat()->setFormatCode(\PhpOffice\PhpSpreadsheet\Style\NumberFormat::FORMAT_NUMBER);
             
             $commissions_previous1 = DB::table('tb_main_commission')
@@ -459,7 +459,7 @@ class CommissionController extends Controller
         $sumpercentCom = ($sumSaleTotal != 0) ? ($sumCom / $sumSaleTotal) * 100 : 0; // % ค่าคอมมิชชั่น
         
         $sheetSale->setCellValue('C' . $rowSale, 'Total');  
-        $sheetSale->setCellValue('D' . $rowSale, $sumSaleTotal);  
+        $sheetSale->setCellValue('D' . $rowSale, $sumSaleTotal)->getStyle('D'.$rowSale.':E' . $rowSale)->getNumberFormat()->setFormatCode(\PhpOffice\PhpSpreadsheet\Style\NumberFormat::FORMAT_NUMBER);  
         $sheetSale->setCellValue('E' . $rowSale, $sumCom);   
         $sheetSale->setCellValue('F' . $rowSale, $sumpercentCom/100)->getStyle('F'.$rowSale.':F' . $rowSale)->getNumberFormat()->setFormatCode(\PhpOffice\PhpSpreadsheet\Style\NumberFormat::FORMAT_PERCENTAGE_00);        
         $sheetSale->setCellValue('G' . $rowSale, $sumCountPc); 
@@ -488,7 +488,7 @@ class CommissionController extends Controller
             $mpdf = new Mpdf();
             
             $mpdf->AddPage('L'); // แนวนอน
-            $mpdf->SetFont('freeserif', '', 12); // ตั้งฟอนต์ที่รองรับภาษาไทย
+            $mpdf->SetFont('THSarabunNew', '', 12); // ตั้งฟอนต์ที่รองรับภาษาไทย
             $mpdf->SetFooter('{PAGENO} / {nbpg}');
 
             $html = view('commissions.commission_pdf', compact('commissions', 'commissions_sale' , 'month', 'year','show_month','currentMonthName','previousMonth' ,'previousMonth2','previousMonthName1','previousMonthName2'))->render();
