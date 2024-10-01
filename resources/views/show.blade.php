@@ -29,8 +29,12 @@
     <h1 align="center">Commissions PC for {{ $month }} {{ $year }}</h1>
      <!-- ปุ่มสำหรับ Export -->
      <div class="mb-3 text-right">
-        <a href="{{ route('commissions.export', ['month' => $var_month, 'show_month' =>$month, 'year' => $year, 'type' => 'excel']) }}" class="btn btn-success">Export to Excel</a>
-        <a href="{{ route('commissions.export', ['month' => $var_month, 'show_month' =>$month, 'year' => $year, 'type' => 'pdf']) }}" target="_blank" class="btn btn-danger" >Export to PDF</a>
+        <a href="{{ route('commissions.export', ['month' => $var_month, 'show_month' =>$month, 'year' => $year, 'type' => 'excel']) }}" class="btn btn-success">
+            <img src="{{ asset('exportexcel.png') }}" width="40" height="40" alt="Export"> 
+        </a>
+        <a href="{{ route('commissions.export', ['month' => $var_month, 'show_month' =>$month, 'year' => $year, 'type' => 'pdf']) }}" target="_blank" class="btn btn-danger" >
+            <img src="{{ asset('exportpdf.png') }}" width="40" height="40" alt="Export">
+        </a>
     </div>
         <table id="data-table" class="table table-bordered table-striped">
         {{-- <table class="table table-bordered table-striped"> --}}
