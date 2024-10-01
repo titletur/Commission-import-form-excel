@@ -99,6 +99,10 @@
                 $count = count($commissions);
                 $sum_percent_achieve = 0;
                 $sum_percent_com = 0;
+                $sum_percent_com0 = 0;
+                $sum_percent_com1 = 0;
+                $sum_percent_com2 = 0;
+                
             @endphp
 
             @foreach($commissions as $commission)
@@ -126,6 +130,10 @@
                 $sum_salary += $commission->pc_salary;
                 $sum_percent_achieve += $commission->tarket != 0 ? ($commission->sale_total / $commission->tarket) * 100 : 0;
                 $sum_percent_com += $commission->net_com != 0 ? ($commission->net_com / $commission->sale_total) * 100: 0;
+                
+
+                
+               
             @endphp
             <tr>
                 <td align="center">{{ $commission->store_id }}</td> 
@@ -169,6 +177,10 @@
                         $net_com2 = optional($commissions_previous2)->net_com ?? 0;
                         $pc_salary2 = optional($commissions_previous2)->pc_salary ?? 0;
                         $sale_total2 = optional($commissions_previous2)->sale_total ?? 0;
+
+                    $sum_percent_com0 += $commission->sale_total != 0 ? (($commission->net_com + $commission->pc_salary) / $commission->sale_total) * 100: 0;
+                    $sum_percent_com1 += $sale_total1 != 0 ? (($net_com1 + $pc_salary1) / $sale_total1) * 100: 0;
+                    $sum_percent_com2 += $sale_total2 != 0 ? (($net_com2 + $pc_salary2)/ $sale_total2) * 100: 0;
                 @endphp
                 <td align="right">{{ $commission->sale_total != 0 ? number_format((($commission->net_com + $commission->pc_salary) / $commission->sale_total) * 100, 2) : '0' }} %</td> 
                 <td align="right">{{ $sale_total1 != 0 ? number_format((($net_com1 + $pc_salary1) / $sale_total1) * 100, 2) : '0' }} %</td>
@@ -195,7 +207,10 @@
                 <td align="right">{{ number_format($sum_net_pay, 0) }}</td>
                 <td align="right">{{ number_format($sum_percent_com / $count, 2) }} %</td>
                 <td align="right">{{ number_format($sum_salary, 0) }}</td>
-                <td colspan="5"></td>
+                <td align="right">{{ number_format($sum_percent_com0 / $count, 2) }}%</td>
+                <td align="right">{{ number_format($sum_percent_com1 / $count, 2) }}%</td>
+                <td align="right">{{ number_format($sum_percent_com2 / $count, 2) }}%</td>
+                <td align="right"></td>
             </tr>
         </tbody>
     </table>
