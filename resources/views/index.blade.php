@@ -112,8 +112,12 @@
                             @if ($data['status'] == 1)
                              Completed
                              <a href="{{ route('commissions.export', ['month' => $data['var_month'], 'show_month' =>$data['month'], 'year' => $data['var_year'], 'type' => 'excel']) }}" >
-                             <img src="{{ asset('export.png') }}" width="20" height="20" alt="Export"> 
+                             <img src="{{ asset('exportexcel.png') }}" width="35" height="35" alt="Export"> 
                              </a>
+                             &nbsp;&nbsp;
+                             <a href="{{ route('commissions.export', ['month' => $data['var_month'], 'show_month' =>$data['month'], 'year' => $data['var_year'], 'type' => 'pdf']) }}" >
+                                <img src="{{ asset('exportpdf.png') }}" width="35" height="35" alt="Export">
+                            </a>
                             @else
                                 @if(in_array('Make_completed', $permissions))
                                 <form action="{{ route('status.updateOrCreate') }}" method="POST" style="display:inline;"> 
