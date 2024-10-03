@@ -192,6 +192,7 @@
                 <tr>
                     <th colspan="3" align="center">Sum Total</th>
                     <th>{{ number_format($totals_sale['target'],0) }}</th>
+                    <th></th>
                     <th>{{ number_format($totals_sale['sale_out'],0) }}</th>
                     <th>{{ number_format($totals_sale['sale_tv'],0) }}</th>
                     <th>{{ number_format($totals_sale['sale_av'],0) }}</th>
