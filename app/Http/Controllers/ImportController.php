@@ -189,7 +189,7 @@ class ImportController extends Controller
                 'sale_amt_ty_vat' => $price_amt_vat,
                 'sale_price' => $price,
                 'sale_price_vat' => $price_vat,
-                'sale_amt_ly' => $row['sale_amt_ly'],
+                'sale_amt_ly' => is_numeric($row['sale_amt_ly']) ? $row['sale_amt_ly'] : 0, // ตรวจสอบค่า หากไม่ใช่ตัวเลขให้ใช้ค่าเริ่มต้นเป็น 0
                 'sale_amt_var' => $row['sale_amt_var'],
                 'sale_qty_ty' => $row['sale_qty_ty'],
                 'sale_qty_ly' => $row['sale_qty_ly'],
