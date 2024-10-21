@@ -4,10 +4,10 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        <title>Commission Bigc</title>
+        <title>Commission Makro</title>
 
         <!-- Fonts -->
-        <link rel="icon" href="{{ asset('bigc.jpg') }}" type="image/x-icon">
+        <link rel="icon" href="{{ asset('icon.jpg') }}" type="image/x-icon">
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=figtree:400,600&display=swap" rel="stylesheet" />
 
@@ -23,7 +23,7 @@
                 <div class="relative w-full max-w-2xl px-6 lg:max-w-7xl">
                     <header class="grid grid-cols-2 items-center gap-2 py-10 lg:grid-cols-3">
                         <div class="flex lg:justify-center lg:col-start-2">
-                            <img src="{{ asset('logo.png') }}" alt="BigC Logo">
+                            <img src="{{ asset('logo.png') }}" alt="makro Logo">
                         </div>
                         @if (Route::has('login'))
                             <nav class="-mx-3 flex flex-1 justify-end">
@@ -68,10 +68,10 @@
                     </main> --}}
                     <main class="mt-6 flex justify-center items-center">
                         <div class="relative p-6" style="background: rgba(255, 255, 255, 0.5); border-radius: 15px; text-align: Left; width: 60%; border: 1px solid rgba(255, 255, 255, 0.3);">
-                            <img src="{{ asset('bigc.jpg') }}" alt="Big-c" width="70" style="border-radius: 15%; margin-bottom: 10px;">
+                            <img src="{{ asset('makro.png') }}" alt="Big-c" width="24%" >
                             <!-- English Description -->
                             <p style="font-size: 16px; color: #333;">
-                                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; The Commission Big-c program is developed by Hi-Fi Orient Thai Co. Ltd. It is used to manage sales data and commissions under the company’s rules and regulations. Call 02-954-5281 
+                                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; The Commission Makro program is developed by Hi-Fi Orient Thai Co. Ltd. It is used to manage sales data and commissions under the company’s rules and regulations. Call 02-954-5281 
                             </p>
 
                             <br>
@@ -79,7 +79,7 @@
                             <br>
                             <!-- Thai Description -->
                             <p style="font-size: 16px; color: #333;">
-                                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; โปรแกรม Commission Big-c นี้จัดทำขึ้นโดย บริษัทไฮไฟ โอเรียนท์ไทย จำกัด ใช้ในการบริหารจัดการข้อมูลการขายและค่าคอมมิชชั่นของบริษัท ภายใต้กฏเกณฑ์เงื่อนไขที่บริษัทกำหนด โทร 02-954-5281 
+                                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; โปรแกรม Commission Makro นี้จัดทำขึ้นโดย บริษัทไฮไฟ โอเรียนท์ไทย จำกัด ใช้ในการบริหารจัดการข้อมูลการขายและค่าคอมมิชชั่นของบริษัท ภายใต้กฏเกณฑ์เงื่อนไขที่บริษัทกำหนด โทร 02-954-5281 
                             </p>
                             <br><br><br><br><br><br><br><br><br><br><br><br><br>
                         </div>
