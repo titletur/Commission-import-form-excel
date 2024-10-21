@@ -1,7 +1,7 @@
 <x-guest-layout>
     <div style="display: flex; align-items: center;">
-        <img src="{{ asset('bigc.jpg') }}" alt="Big-c" width="50" style="border-radius: 15%; margin-right: 10px;">
-        <span style="font-size: 1.5rem;">Commission Big-C Register</span>
+        <img src="{{ asset('makro.png') }}" alt="Big-c" width="50%" >
+        <span style="font-size: 2.5rem;">&nbsp; Register</span>
     </div>
     <br>
     <form method="POST" action="{{ route('register') }}">
