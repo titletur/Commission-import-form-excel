@@ -3,8 +3,8 @@
     <x-auth-session-status class="mb-4" :status="session('status')" />
 
     <div style="display: flex; align-items: center;">
-        <img src="{{ asset('bigc.jpg') }}" alt="Big-c" width="50" style="border-radius: 15%; margin-right: 10px;">
-        <span style="font-size: 1.5rem;">Commission Big-C SIGN IN</span>
+        <img src="{{ asset('makro.png') }}" alt="Big-c" width="40%" >
+        <span style="font-size: 2.5rem;">&nbsp;SIGN IN</span>
     </div>
     <br>
 
