@@ -8,6 +8,7 @@ use PhpOffice\PhpSpreadsheet\IOFactory;
 use Illuminate\Support\Facades\DB;
 use App\Models\Transaction;
 use App\Models\product;
+use App\Models\Price;
 use App\Models\tb_store;
 use App\Models\Commission;
 use App\Models\main_commission;
@@ -26,7 +27,7 @@ class ImportController extends Controller
     public function import(Request $request)
     {
         $request->validate([
-            'excel_file' => 'required|mimes:xls,xlsx|max:2048',
+            'excel_file' => 'required|mimes:xls,xlsx|max:10240',
         ]);
         $var_year = $request->input('var_year');
         $var_month = $request->input('var_month');
@@ -44,76 +45,75 @@ class ImportController extends Controller
             $data = [];
         foreach ($spreadsheet->getAllSheets() as $sheet) {
                 $sheetData = $sheet->toArray(null, true, true, true);
-        foreach ($sheetData as $key => $row) {
-            if ($key > 0) {
-            if ($row['V'] != '0' && $row['V'] != "Sale Qty TY"){
+
+                $as_of_month_year = $sheetData[16]['B']; // Assuming B16 is at index 16
+                $as_of_date  = array_filter(preg_split('/\s+/', $as_of_month_year));
+                $as_of_month = $as_of_date[0] ? $as_of_date[0] : null;
+                $as_of_year = $as_of_date[1] ? $as_of_date[1] : null;
                 
-            // แปลงข้อมูลจากฟอร์แมต 'M-y' เช่น 'Jun-24' ให้เป็นเดือนและปี
-            // $as_of_month_year = \DateTime::createFromFormat('M-y', $row['F']);
-            // $as_of_month = $as_of_month_year ? $as_of_month_year->format('m') : null;
-            // $as_of_year = $as_of_month_year ? $as_of_month_year->format('Y') : null;
+                //  dd($as_of_month, $short_month, $as_of_year);
 
-            $as_of_month_year = $row['F']; 
-            $clean_date_f = substr($as_of_month_year, 2);
-            // แปลงรูปแบบวันที่
-            $date_object_f = \DateTime::createFromFormat('M-y', $clean_date_f);
-            $as_of_month = $date_object_f ? $date_object_f->format('m') : null;
-            $as_of_year = $date_object_f ? $date_object_f->format('Y') : null;
+        foreach ($sheetData as $key => $row) {
+            if ($key > 19) {
 
-            $last_year_compare_month = $row['G']; 
-            $clean_date_g = substr($last_year_compare_month, 2);
-            // แปลงรูปแบบวันที่
-            $date_object_g = \DateTime::createFromFormat('M-y', $clean_date_g);
-            $formatted_last_year_compare_month = $date_object_g ? $date_object_g->format('Y-m') . '-01' : null;
-
-            $report_date = $row['H']; 
-            $clean_date_h = substr($report_date, 2);
-            $date_object_h = \DateTime::createFromFormat('d-M-y', $clean_date_h);
-            $formatted_report_date = $date_object_h ? $date_object_h->format('Y-m-d') : null;
-
-            if ($as_of_month == $var_month && $as_of_year == $var_year) {
+            if ($row['R'] != '0' && $as_of_month == $var_month && $as_of_year == $var_year ) {
             $data[] = [
-                'report_code' => $row['A'],
-                'suppliercode' => substr($row['B'],0,7),
-                'suppliername' => $row['B'],
-                'business_format' => $row['C'],
-                'compare' => $row['D'],
-                'store_id' => substr($row['E'],0,5),
-                'store' => $row['E'],
-                'as_of_month' => $as_of_month,
-                'as_of_year' => $as_of_year,
-                'last_year_compare_month' => $formatted_last_year_compare_month,
-                'report_date' => $formatted_report_date,
-                'division' => $row['I'],
-                'department' => $row['J'],
-                'subdepartment' => $row['K'],
-                'pro_Class' => $row['L'],
-                'sub_pro_class' => $row['M'],
-                'barcode' => $row['N'],
-                'article' => $row['O'],
-                'article_name' => $row['P'],
-                'brand' => $row['Q'],
-                'pro_model' => $row['R'],
-                'sale_amt_ty' => $row['S'],
-                'sale_amt_ly' => $row['T'],
-                'sale_amt_var' => $row['U'],
-                'sale_qty_ty' => $row['V'],
-                'sale_qty_ly' => $row['W'],
-                'sale_qty_var' => $row['X'],
-                'stock_ty' => $row['Y'],
-                'stock_ly' => $row['Z'],
-                'stock_var' => $row['AA'],
-                'stock_qty_ty' => $row['AB'],
-                'stock_qty_ly' => $row['AC'],
-                'stock_qty_var' => $row['AD'],
-                'day_on_hand_ty' => $row['AE'],
-                'day_on_hand_ly' => $row['AF'],
-                'day_on_hand_diff' => $row['AG'],
+                'supplier_number' => $row['A'],
+                'location_number' => $row['B'],
+                'location_name' => $row['C'],
+                'class_number' => $row['D'],
+                'sub_class' => $row['E'],
+                'item_number' => $row['F'],
+                'barcode' => $row['G'],
+                'as_of_month' => $var_month,
+                'as_of_year' => $var_year,
+                'item_des' => $row['H'],
+                'eoh_qty' => $row['I'],
+                'on_order' => $row['J'],
+                'pack_type' => $row['K'],
+                'unit' => $row['L'],
+                'avg_net_sale_qty' => $row['M'],
+                'net_sale_qty_ytd' => $row['N'],
+                'last_receved_date' => $row['O'],
+                'last_sold_date' => $row['P'],
+                'stock_cover_day' => $row['Q'],
+                'net_sale_qty_mtd' => $row['R'],
+                'day1' => $sheet->getCell('S' . $key)->getCalculatedValue(),
+                'day2' => $sheet->getCell('T' . $key)->getCalculatedValue(),
+                'day3' => $sheet->getCell('U' . $key)->getCalculatedValue(),
+                'day4' => $sheet->getCell('V' . $key)->getCalculatedValue(),
+                'day5' => $sheet->getCell('W' . $key)->getCalculatedValue(),
+                'day6' => $sheet->getCell('X' . $key)->getCalculatedValue(),
+                'day7' => $sheet->getCell('Y' . $key)->getCalculatedValue(),
+                'day8' => $sheet->getCell('Z' . $key)->getCalculatedValue(),
+                'day9' => $sheet->getCell('AA' . $key)->getCalculatedValue(),
+                'day10' => $sheet->getCell('AB' . $key)->getCalculatedValue(),
+                'day11' => $sheet->getCell('AC' . $key)->getCalculatedValue(),
+                'day12' => $sheet->getCell('AD' . $key)->getCalculatedValue(),
+                'day13' => $sheet->getCell('AE' . $key)->getCalculatedValue(),
+                'day14' => $sheet->getCell('AF' . $key)->getCalculatedValue(),
+                'day15' => $sheet->getCell('AG' . $key)->getCalculatedValue(),
+                'day16' => $sheet->getCell('AH' . $key)->getCalculatedValue(),
+                'day17' => $sheet->getCell('AI' . $key)->getCalculatedValue(),
+                'day18' => $sheet->getCell('AJ' . $key)->getCalculatedValue(),
+                'day19' => $sheet->getCell('AK' . $key)->getCalculatedValue(),
+                'day20' => $sheet->getCell('AL' . $key)->getCalculatedValue(),
+                'day21' => $sheet->getCell('AM' . $key)->getCalculatedValue(),
+                'day22' => $sheet->getCell('AN' . $key)->getCalculatedValue(),
+                'day23' => $sheet->getCell('AO' . $key)->getCalculatedValue(),
+                'day24' => $sheet->getCell('AP' . $key)->getCalculatedValue(),
+                'day25' => $sheet->getCell('AQ' . $key)->getCalculatedValue(),
+                'day26' => $sheet->getCell('AR' . $key)->getCalculatedValue(),
+                'day27' => $sheet->getCell('AS' . $key)->getCalculatedValue(),
+                'day28' => $sheet->getCell('AT' . $key)->getCalculatedValue(),
+                'day29' => $sheet->getCell('AU' . $key)->getCalculatedValue(),
+                'day30' => $sheet->getCell('AV' . $key)->getCalculatedValue(),
+                'day31' => $sheet->getCell('AW' . $key)->getCalculatedValue(),
             ];
             }
             }
             }
-        }
+
         }
         return view('preview', compact('data', 'filePath','var_year', 'short_month','var_month'));
         }
@@ -145,200 +145,260 @@ class ImportController extends Controller
         if (is_array($data)) {
             foreach ($data as $key => $row) {
                 
-                $price_amt_vat = ($row['sale_amt_ty']*1.07);
-                // $price = $row['sale_amt_ty']/$row['sale_qty_ty'];
-                // $price_vat = ($row['sale_amt_ty']*1.07)/$row['sale_qty_ty'];
-                $price = abs($row['sale_amt_ty']) / abs($row['sale_qty_ty']);
-                $price_vat = abs(($row['sale_amt_ty'] * 1.07)) / abs($row['sale_qty_ty']);
-
-
-                if($row['suppliercode'] == '4400215'){
+                if($row['supplier_number'] == '28106'){
                     $type_product = "AV";
-                }else if($row['suppliercode'] == '7001389'){
+                }else if($row['supplier_number'] == '29898'){
+                    $type_product = "AV";
+                }else if($row['supplier_number'] == '31445'){
+                    $type_product = "AV";
+                }else if($row['supplier_number'] == '92421'){
+                    $type_product = "HA";
+                }else if($row['supplier_number'] == '93510'){
                     $type_product = "HA";
                 }else{
                     $type_product = "TV";
                 }
-                // if($row['pro_model'] ='AN-FR5250S' && $row['store_id'] =='11129'){
-                // dd($data);
-                // }
+
                 Transaction::create([
-                'report_code' => $row['report_code'],
-                'suppliercode' => $row['suppliercode'],
-                'suppliername' => $row['suppliername'],
-                'business_format' => $row['business_format'],
-                'compare' => $row['compare'],
-                'store_id' => $row['store_id'],
-                'store' => $row['store'],
-                'as_of_month' => $row['as_of_month'],
-                'as_of_year' => $row['as_of_year'],
-                'last_year_compare_month' => $row['last_year_compare_month'],
-                'report_date' => $row['report_date'],
-                'division' => $row['division'],
-                'department' => $row['department'],
-                'subdepartment' => $row['subdepartment'],
-                'pro_Class' => $row['pro_Class'],
-                'sub_pro_class' => $row['sub_pro_class'],
-                'barcode' => $row['barcode'],
-                'article' => $row['article'],
-                'article_name' => $row['article_name'],
-                'brand' => $row['brand'],
-                'pro_model' => $row['pro_model'],
-                'type_product'=> $type_product,
-                'sale_amt_ty' => $row['sale_amt_ty'],
-                'sale_amt_ty_vat' => $price_amt_vat,
-                'sale_price' => $price,
-                'sale_price_vat' => $price_vat,
-                'sale_amt_ly' => is_numeric($row['sale_amt_ly']) ? $row['sale_amt_ly'] : 0, // ตรวจสอบค่า หากไม่ใช่ตัวเลขให้ใช้ค่าเริ่มต้นเป็น 0
-                'sale_amt_var' => $row['sale_amt_var'],
-                'sale_qty_ty' => $row['sale_qty_ty'],
-                'sale_qty_ly' => $row['sale_qty_ly'],
-                'sale_qty_var' => $row['sale_qty_var'],
-                'stock_ty' => $row['stock_ty'],
-                'stock_ly' => $row['stock_ly'],
-                'stock_var' => $row['stock_var'],
-                'stock_qty_ty' => $row['stock_qty_ty'],
-                'stock_qty_ly' => $row['stock_qty_ly'],
-                'stock_qty_var' => $row['stock_qty_var'],
-                'day_on_hand_ty' => $row['day_on_hand_ty'],
-                'day_on_hand_ly' => $row['day_on_hand_ly'],
-                'day_on_hand_diff' => $row['day_on_hand_diff'],
+                'supplier_number'=> $row['supplier_number'],
+                'location_number'=> $row['location_number'],
+                'location_name'=> $row['location_name'],
+                'class_number'=> $row['class_number'],
+                'sub_class'=> $row['sub_class'],
+                'item_number'=> $row['item_number'],
+                'barcode'=> $row['barcode'],
+                'as_of_month'=> $var_month,
+                'as_of_year'=> $var_year,
+                'item_des'=> $row['item_des'],
+                'eoh_qty'=> $row['eoh_qty'],
+                'on_order'=> $row['on_order'],
+                'pack_type'=> $row['pack_type'],
+                'unit'=> $row['unit'],
+                'avg_net_sale_qty'=> $row['avg_net_sale_qty'],
+                'net_sale_qty_ytd'=> $row['net_sale_qty_ytd'],
+                'last_receved_date'=> $row['last_receved_date'],
+                'last_sold_date'=> $row['last_sold_date'],
+                'stock_cover_day'=> $row['stock_cover_day'],
+                'net_sale_qty_mtd'=> $row['net_sale_qty_mtd'],
+                'day1'=> $row['day1'],
+                'day2'=> $row['day2'],
+                'day3'=> $row['day3'],
+                'day4'=> $row['day4'],
+                'day5'=> $row['day5'],
+                'day6'=> $row['day6'],
+                'day7'=> $row['day7'],
+                'day8'=> $row['day8'],
+                'day9'=> $row['day9'],
+                'day10'=> $row['day10'],
+                'day11'=> $row['day11'],
+                'day12'=> $row['day12'],
+                'day13'=> $row['day13'],
+                'day14'=> $row['day14'],
+                'day15'=> $row['day15'],
+                'day16'=> $row['day16'],
+                'day17'=> $row['day17'],
+                'day18'=> $row['day18'],
+                'day19'=> $row['day19'],
+                'day20'=> $row['day20'],
+                'day21'=> $row['day21'],
+                'day22'=> $row['day22'],
+                'day23'=> $row['day23'],
+                'day24'=> $row['day24'],
+                'day25'=> $row['day25'],
+                'day26'=> $row['day26'],
+                'day27'=> $row['day27'],
+                'day28'=> $row['day28'],
+                'day29'=> $row['day29'],
+                'day30'=> $row['day30'],
+                'day31'=> $row['day31'],
                 ]);
                 //อัปเดทข้อมูล Store
                 
                 $storeData = [
-                    'suppliercode' => $row['suppliercode'],
-                    'store' => $row['store'],
+                    'store' => $row['location_name'],
                     // 'type_store' =>'A'
                 ];
 
                 tb_store::updateOrCreate(
-                    ['store_id' => $row['store_id']], // Unique key to check
+                    ['store_id' => $row['location_number']], // Unique key to check
                     $storeData
                 );
 
-                
-                
                 $productData = [
-                    'suppliercode' => $row['suppliercode'],
-                    'division' => $row['division'],
-                    'department' => $row['department'],
-                    'subdepartment' => $row['subdepartment'],
-                    'pro_Class' => $row['pro_Class'],
-                    'sub_pro_class' => $row['sub_pro_class'],
+                    'supplier_number' => $row['supplier_number'],
+                    // 'type_product' => $type_product,
                     'barcode' => $row['barcode'],
-                    'article' => $row['article'],
-                    'article_name' => $row['article_name'],
-                    'brand' => $row['brand'],
-                    'pro_model' => $row['pro_model'],
-                    'type_product' => $type_product,
-                    'price' => $price,
-                    'price_vat' => $price_vat,
-                    // 'com' => 0
+                    'item_des' => $row['item_des'],
+                    'pack_type' => $row['pack_type'],
                 ];
 
                 product::updateOrCreate(
-                    ['pro_model' => $row['pro_model']], // Unique key to check
+                    ['item_number' => $row['item_number']], // Unique key to check
                     $productData
                 );
 
 
                 // Get PC data
                 $pcs = tb_pc::whereNull('status_pc')
-                    ->where('store_id', $row['store_id'])
+                    ->where('store_id', $row['location_number'])
                     ->get();
 
 
                 // Calculate and Insert into tb_commission
                 if ($pcs->count() == 1) {
                     $pc = $pcs->first();
-                    $com = $this->calculateCom($row['pro_model']); // Assume this is a method for calculating commission
 
-                    // Commission::create([
-                    //     'suppliercode' => $row['suppliercode'],
-                    //     'store_id' => $row['store_id'],
-                    //     'type_store' => $pc->type_store,
-                    //     'as_of_month' => $row['as_of_month'],
-                    //     'as_of_year' => $row['as_of_year'],
-                    //     'pro_model' => $row['pro_model'],
-                    //     'type_product' => $type_product,
-                    //     'sale_amt' => $row['sale_amt_ty']/$row['sale_qty_ty'],
-                    //     'sale_amt_vat' => ($row['sale_amt_ty'] * 1.07)/$row['sale_qty_ty'], // Example VAT calculation
-                    //     'sale_total' => $row['sale_amt_ty'],
-                    //     'sale_total_vat' => $row['sale_amt_ty'] * 1.07,
-                    //     'sale_qty' => $row['sale_qty_ty'],
-                    //     'com' => $com,
-                    //     'id_pc' => $pc->id,
-                    //     'type_pc' => $pc->type_pc
-                    // ]);
+                    $product = product::where('item_number', $row['item_number'])->first();
+                    $price = Price::where('item_number', $row['item_number'])->first();
+                    $sale_total_price_item = 0;
+                    for ($num_qty_price = 1; $num_qty_price <= 31; $num_qty_price++) {
+                        if ($row['day'.$num_qty_price] != 0 && $row['day'.$num_qty_price] !== null) {
+
+                            $price_column = 'price_day' . $num_qty_price;
+
+                            if (isset($price->$price_column) && $price->$price_column != 0) {
+                                $sale_total_price_item += $row['day'.$num_qty_price] * $price->$price_column ;
+                            }else{
+                                $sale_total_price_item += $row['day'.$num_qty_price] * $product->price_vat ;
+                            }
+
+                        }
+                    }
                     Commission::updateOrInsert(
                         // เงื่อนไขในการเช็คว่ามีข้อมูลอยู่แล้วหรือไม่
                         [
-                            'suppliercode' => $row['suppliercode'],
-                            'store_id' => $row['store_id'],
+                            'supplier_number' => $row['supplier_number'],
+                            'store_id' => $row['location_number'],
                             'as_of_month' => $row['as_of_month'],
                             'as_of_year' => $row['as_of_year'],
-                            'pro_model' => $row['pro_model'],
+                            'item_number' => $row['item_number'],
                             'id_pc' => $pc->id,
                         ],
                         // ถ้ามีข้อมูลอยู่แล้วให้ทำการอัปเดทข้อมูลนี้
                         [
                             'type_store' => $pc->type_store,
-                            'type_product' => $type_product,
-                            'sale_amt' => ($row['sale_amt_ty'] < 0 ? -1 : 1) * (abs($row['sale_amt_ty']) / abs($row['sale_qty_ty'])),
-                            'sale_amt_vat' => ($row['sale_amt_ty'] < 0 ? -1 : 1) * ((abs($row['sale_amt_ty']) * 1.07) / abs($row['sale_qty_ty'])), // การคำนวณ VAT
-                            'sale_qty' => $row['sale_qty_ty'],
-                            'com' => $com,
+                            'type_product' => $product->type_product,
+                            'sale_total' => $sale_total_price_item, 
+                            'sale_qty' => $row['net_sale_qty_mtd'],
+                            'com' => $product->com,
                             'type_pc' => $pc->type_pc,
+                            'day1'=> $row['day1'],
+                            'day2'=> $row['day2'],
+                            'day3'=> $row['day3'],
+                            'day4'=> $row['day4'],
+                            'day5'=> $row['day5'],
+                            'day6'=> $row['day6'],
+                            'day7'=> $row['day7'],
+                            'day8'=> $row['day8'],
+                            'day9'=> $row['day9'],
+                            'day10'=> $row['day10'],
+                            'day11'=> $row['day11'],
+                            'day12'=> $row['day12'],
+                            'day13'=> $row['day13'],
+                            'day14'=> $row['day14'],
+                            'day15'=> $row['day15'],
+                            'day16'=> $row['day16'],
+                            'day17'=> $row['day17'],
+                            'day18'=> $row['day18'],
+                            'day19'=> $row['day19'],
+                            'day20'=> $row['day20'],
+                            'day21'=> $row['day21'],
+                            'day22'=> $row['day22'],
+                            'day23'=> $row['day23'],
+                            'day24'=> $row['day24'],
+                            'day25'=> $row['day25'],
+                            'day26'=> $row['day26'],
+                            'day27'=> $row['day27'],
+                            'day28'=> $row['day28'],
+                            'day29'=> $row['day29'],
+                            'day30'=> $row['day30'],
+                            'day31'=> $row['day31'],
                         ]
                     );
                 } else if ($pcs->count() > 1) {
-                    $sale_qty_per_pc = (int)(abs($row['sale_qty_ty']) / $pcs->count());
-                    $remaining_qty = abs($row['sale_qty_ty']) - (abs($sale_qty_per_pc) * $pcs->count());
+                    $sale_qty_per_pc = (int)(abs($row['net_sale_qty_mtd']) / $pcs->count());
+                    $remaining_qty = abs($row['net_sale_qty_mtd']) - (abs($sale_qty_per_pc) * $pcs->count());
+                    
 
                     foreach ($pcs as $pc) {
-                        $com = $this->calculateCom($row['pro_model']); // Calculate commission
+                        
+                        $product = product::where('item_number', $row['item_number'])->first();
+                        $price = Price::where('item_number', $row['item_number'])->first();
 
-                        // Commission::create([
-                        //     'suppliercode' => $row['suppliercode'],
-                        //     'store_id' => $row['store_id'],
-                        //     'type_store' => $pc->type_store,
-                        //     'as_of_month' => $row['as_of_month'],
-                        //     'as_of_year' => $row['as_of_year'],
-                        //     'pro_model' => $row['pro_model'],
-                        //     'type_product' => $type_product,
-                        //     'sale_amt' => $row['sale_amt_ty'],
-                        //     'sale_amt_vat' => $row['sale_amt_ty'] * 1.07,
-                        //     'sale_total' => $sale_qty_per_pc * $row['sale_amt_ty'],
-                        //     'sale_total_vat' => $sale_qty_per_pc * $row['sale_amt_ty'] * 1.07,
-                        //     'sale_qty' => $sale_qty_per_pc + ($remaining_qty > 0 ? 1 : 0),
-                        //     'com' => $com,
-                        //     'id_pc' => $pc->id,
-                        //     'type_pc' => $pc->type_pc
-                        // ]);
+                        $day_totals = [];
+                        $remaining_days_qty = [];
+                        for ($day = 1; $day <= 31; $day++) {
+                            $day_key = 'day' . $day;
+                            $day_totals[$day] = (int)(abs($row[$day_key]) / $pcs->count());
+                            $remaining_days_qty[$day] = abs($row[$day_key]) - (abs($day_totals[$day]) * $pcs->count());
+                        }
+
+                        $sale_total_price_item = 0;
+                        for ($num_qty_price = 1; $num_qty_price <= 31; $num_qty_price++) {
+                            $day_qty = $day_totals[$num_qty_price]; 
+                            if ($day_qty != 0) {
+                                $price_column = 'price_day' . $num_qty_price; 
+                                if (isset($price->$price_column) && $price->$price_column != 0) {
+                                    $sale_total_price_item += $day_qty * $price->$price_column; 
+                                } else {
+                                    $sale_total_price_item += $day_qty * $product->price_vat; 
+                                }
+                            }
+                        }
 
                         Commission::updateOrInsert(
                             [
-                                'suppliercode' => $row['suppliercode'],
-                                'store_id' => $row['store_id'],
+                                'supplier_number' => $row['supplier_number'],
+                                'store_id' => $row['location_number'],
                                 'as_of_month' => $row['as_of_month'],
                                 'as_of_year' => $row['as_of_year'],
-                                'pro_model' => $row['pro_model'],
+                                'item_number' => $row['item_number'],
                                 'id_pc' => $pc->id,
                             ],
                             [
                                 'type_store' => $pc->type_store,
-                                'type_product' => $type_product,
-                                'sale_amt' => ($row['sale_amt_ty'] < 0 ? -1 : 1) * (abs($row['sale_amt_ty']) / abs($row['sale_qty_ty'])),
-                                'sale_amt_vat' => ($row['sale_amt_ty'] < 0 ? -1 : 1) * ((abs($row['sale_amt_ty']) * 1.07) / abs($row['sale_qty_ty'])), 
-                                // 'sale_qty' => $sale_qty_per_pc + ($remaining_qty > 0 ? 1 : 0),
-                                'sale_qty' => ($row['sale_qty_ty'] < 0 ? -1 : 1) * ($sale_qty_per_pc + ($remaining_qty > 0 ? 1 : 0)),
-
-                                'com' => $com,
+                                'type_product' => $product->type_product,
+                                'sale_total' => $sale_total_price_item,
+                                'sale_qty' => ($row['net_sale_qty_mtd'] < 0 ? -1 : 1) * ($sale_qty_per_pc + ($remaining_qty > 0 ? 1 : 0)),
+                                'com' => $product->com,
                                 'type_pc' => $pc->type_pc,
+                                'day1' => ($row['day1'] < 0 ? -1 : 1) * ($day_totals[1] + ($remaining_days_qty[1] > 0 ? 1 : 0)),
+                                'day2' => ($row['day2'] < 0 ? -1 : 1) * ($day_totals[2] + ($remaining_days_qty[2] > 0 ? 1 : 0)),
+                                'day3' => ($row['day3'] < 0 ? -1 : 1) * ($day_totals[3] + ($remaining_days_qty[3] > 0 ? 1 : 0)),
+                                'day4' => ($row['day4'] < 0 ? -1 : 1) * ($day_totals[4] + ($remaining_days_qty[4] > 0 ? 1 : 0)),
+                                'day5' => ($row['day5'] < 0 ? -1 : 1) * ($day_totals[5] + ($remaining_days_qty[5] > 0 ? 1 : 0)),
+                                'day6' => ($row['day6'] < 0 ? -1 : 1) * ($day_totals[6] + ($remaining_days_qty[6] > 0 ? 1 : 0)),
+                                'day7' => ($row['day7'] < 0 ? -1 : 1) * ($day_totals[7] + ($remaining_days_qty[7] > 0 ? 1 : 0)),
+                                'day8' => ($row['day8'] < 0 ? -1 : 1) * ($day_totals[8] + ($remaining_days_qty[8] > 0 ? 1 : 0)),
+                                'day9' => ($row['day9'] < 0 ? -1 : 1) * ($day_totals[9] + ($remaining_days_qty[9] > 0 ? 1 : 0)),
+                                'day10' => ($row['day10'] < 0 ? -1 : 1) * ($day_totals[10] + ($remaining_days_qty[10] > 0 ? 1 : 0)),
+                                'day11' => ($row['day11'] < 0 ? -1 : 1) * ($day_totals[11] + ($remaining_days_qty[11] > 0 ? 1 : 0)),
+                                'day12' => ($row['day12'] < 0 ? -1 : 1) * ($day_totals[12] + ($remaining_days_qty[12] > 0 ? 1 : 0)),
+                                'day13' => ($row['day13'] < 0 ? -1 : 1) * ($day_totals[13] + ($remaining_days_qty[13] > 0 ? 1 : 0)),
+                                'day14' => ($row['day14'] < 0 ? -1 : 1) * ($day_totals[14] + ($remaining_days_qty[14] > 0 ? 1 : 0)),
+                                'day15' => ($row['day15'] < 0 ? -1 : 1) * ($day_totals[15] + ($remaining_days_qty[15] > 0 ? 1 : 0)),
+                                'day16' => ($row['day16'] < 0 ? -1 : 1) * ($day_totals[16] + ($remaining_days_qty[16] > 0 ? 1 : 0)),
+                                'day17' => ($row['day17'] < 0 ? -1 : 1) * ($day_totals[17] + ($remaining_days_qty[17] > 0 ? 1 : 0)),
+                                'day18' => ($row['day18'] < 0 ? -1 : 1) * ($day_totals[18] + ($remaining_days_qty[18] > 0 ? 1 : 0)),
+                                'day19' => ($row['day19'] < 0 ? -1 : 1) * ($day_totals[19] + ($remaining_days_qty[19] > 0 ? 1 : 0)),
+                                'day20' => ($row['day20'] < 0 ? -1 : 1) * ($day_totals[20] + ($remaining_days_qty[20] > 0 ? 1 : 0)),
+                                'day21' => ($row['day21'] < 0 ? -1 : 1) * ($day_totals[21] + ($remaining_days_qty[21] > 0 ? 1 : 0)),
+                                'day22' => ($row['day22'] < 0 ? -1 : 1) * ($day_totals[22] + ($remaining_days_qty[22] > 0 ? 1 : 0)),
+                                'day23' => ($row['day23'] < 0 ? -1 : 1) * ($day_totals[23] + ($remaining_days_qty[23] > 0 ? 1 : 0)),
+                                'day24' => ($row['day24'] < 0 ? -1 : 1) * ($day_totals[24] + ($remaining_days_qty[24] > 0 ? 1 : 0)),
+                                'day25' => ($row['day25'] < 0 ? -1 : 1) * ($day_totals[25] + ($remaining_days_qty[25] > 0 ? 1 : 0)),
+                                'day26' => ($row['day26'] < 0 ? -1 : 1) * ($day_totals[26] + ($remaining_days_qty[26] > 0 ? 1 : 0)),
+                                'day27' => ($row['day27'] < 0 ? -1 : 1) * ($day_totals[27] + ($remaining_days_qty[27] > 0 ? 1 : 0)),
+                                'day28' => ($row['day28'] < 0 ? -1 : 1) * ($day_totals[28] + ($remaining_days_qty[28] > 0 ? 1 : 0)),
+                                'day29' => ($row['day29'] < 0 ? -1 : 1) * ($day_totals[29] + ($remaining_days_qty[29] > 0 ? 1 : 0)),
+                                'day30' => ($row['day30'] < 0 ? -1 : 1) * ($day_totals[30] + ($remaining_days_qty[30] > 0 ? 1 : 0)),
+                                'day31' => ($row['day31'] < 0 ? -1 : 1) * ($day_totals[31] + ($remaining_days_qty[31] > 0 ? 1 : 0)),
                             ]
                         );
                         $remaining_qty--;
+                        foreach ($remaining_days_qty as $day => $value) {
+                            $remaining_days_qty[$day]--;
+                        }
                     }
                 } else {
                     // กรณีไม่มี PC พบ ให้ข้ามขั้นตอนนี้ไป
@@ -349,30 +409,18 @@ class ImportController extends Controller
             }   
 
 
-                ///////////Funtion cal commissiom/////////////
-            
-            // $as_of_month = $var_month; 
-            // $as_of_year = $var_year; 
-
-            // Query ข้อมูล sale_tv, unit_tv, sale_av, unit_av, sale_ha, unit_ha
             $salesData = DB::table('tb_commission')
                 ->select(
                     'store_id',
                     'id_pc',
-                    // DB::raw('SUM(CASE WHEN type_product = "TV" THEN sale_amt_vat * sale_qty ELSE 0 END) as sale_tv'),
-                    DB::raw('SUM(CASE WHEN type_product = "TV" AND sale_qty > 0  THEN sale_amt_vat * sale_qty
-                                WHEN type_product = "TV" AND sale_qty < 0 THEN -1 * ABS(sale_amt_vat) * ABS(sale_qty)
-                                ELSE 0 END) as sale_tv'),
+
+                    DB::raw('SUM(CASE WHEN type_product = "TV" THEN sale_total ELSE 0 END) as sale_tv'),
                     DB::raw('SUM(CASE WHEN type_product = "TV" THEN sale_qty ELSE 0 END) as unit_tv'),
-                    // DB::raw('SUM(CASE WHEN type_product = "AV" THEN sale_amt_vat * sale_qty ELSE 0 END) as sale_av'),
-                    DB::raw('SUM(CASE WHEN type_product = "AV" AND sale_qty > 0  THEN sale_amt_vat * sale_qty
-                                WHEN type_product = "AV" AND sale_qty < 0 THEN -1 * ABS(sale_amt_vat) * ABS(sale_qty)
-                                ELSE 0 END) as sale_av'),
+                    
+                    DB::raw('SUM(CASE WHEN type_product = "AV" THEN sale_total ELSE 0 END) as sale_av'),
                     DB::raw('SUM(CASE WHEN type_product = "AV" THEN sale_qty ELSE 0 END) as unit_av'),
-                    // DB::raw('SUM(CASE WHEN type_product = "HA" THEN sale_amt_vat * sale_qty ELSE 0 END) as sale_ha'),
-                    DB::raw('SUM(CASE WHEN type_product = "HA" AND sale_qty > 0  THEN sale_amt_vat * sale_qty
-                                WHEN type_product = "HA" AND sale_qty < 0 THEN -1 * ABS(sale_amt_vat) * ABS(sale_qty)
-                                ELSE 0 END) as sale_ha'),
+
+                    DB::raw('SUM(CASE WHEN type_product = "HA" THEN sale_total ELSE 0 END) as sale_ha'),
                     DB::raw('SUM(CASE WHEN type_product = "HA" THEN sale_qty ELSE 0 END) as unit_ha')
                 )
                 ->where('as_of_month', $var_month)
@@ -422,7 +470,7 @@ class ImportController extends Controller
                     ->get();
                 $pc = $pcs->first();
 
-                $data->achieve = (($data->sale_tv + $data->sale_av) * 100) / $pc->tarket;
+                $data->achieve = $pc->tarket != 0 ? (($data->sale_tv + $data->sale_av) * 100) / $pc->tarket: 0;
             
                 switch ($pc->type_pc) {
                     case 'PC':
@@ -475,9 +523,9 @@ class ImportController extends Controller
                                 break;
                             case 'C':
                                 if ($data->achieve >= 120) {
-                                    $data->extra_tv = 2000;
+                                    $data->extra_tv = 3000;
                                 } elseif ($data->achieve >= 100) {
-                                    $data->extra_tv = 1000;
+                                    $data->extra_tv = 2000;
                                 } else {
                                     $data->extra_tv = 0;
                                 }
@@ -498,31 +546,78 @@ class ImportController extends Controller
                         } else {
                             $data->extra_ha = 0;
                         }
+
+                        //Extra PC
+                        $sale_out = $data->sale_tv + $data->sale_av + $data->sale_ha;
+                        if ($sale_out >= 500000) {
+                            $data->extra_tv += 2000;
+                        } elseif ($sale_out >= 600000) {
+                            $data->extra_tv += 3000;
+                        } else {
+                            $data->extra_tv += 0;
+                        }
+
+                        //Extra store 350000
+                        if ($sale_out >= 350000) {
+
+                            $extra_pc_store = tb_pc::whereNull('status_pc')
+                                ->where('store_id', $data->store_id)
+                                ->where('type_pc', 'PC')
+                                ->get();
+                                
+                            if ($extra_pc_store->count() == 1) {
+                                if ($sale_out >= 1000000) {
+                                    $data->extra_tv += 5000;
+                                }else if ($sale_out >= 800000) {
+                                    $data->extra_tv += 3000;
+                                }
+                            }else if ($extra_pc_store->count() > 1) {
+
+                                $pc_sales = DB::table('tb_commission')
+                                ->select('id_pc', DB::raw('SUM(sale_total) as sale_total'))
+                                ->where('as_of_month', $var_month)
+                                ->where('as_of_year', $var_year)
+                                ->where('type_pc', 'PC')
+                                ->where('store_id', $data->store_id)
+                                ->groupBy('id_pc')
+                                ->havingRaw('SUM(sale_total) >= 350000')
+                                ->get();
+
+                                if($extra_pc_store->count() == $pc_sales->count()){
+                                    
+                                    $extra_pc_sale_total = DB::table('tb_commission')
+                                    ->select(DB::raw('SUM(sale_total) as total_sales'))
+                                    ->where('as_of_month', $var_month)
+                                    ->where('as_of_year', $var_year)
+                                    ->where('type_pc', 'PC')
+                                    ->where('store_id', $data->store_id)
+                                    ->first();
+
+                                    if ($extra_pc_sale_total->total_sales >= 1000000) {
+                                        $data->extra_tv += 5000 / $extra_pc_store->count();
+                                    }else if ($extra_pc_sale_total->total_sales >= 800000) {
+                                        $data->extra_tv += 3000 / $extra_pc_store->count();
+                                    }
+                                }
+                            }else{
+
+                            }
+                        }
                         break;
                     case 'PC_HA':
                         $data->com_tv = $data->normalcom_tv;
                         $data->com_av = $data->normalcom_av;
                         $data->com_ha = $data->normalcom_ha;
 
-                        if ($data->sale_ha > 350000) {
-                            $data->extra_ha = 5500;
-                        } elseif ($data->sale_ha > 320000) {
-                            $data->extra_ha = 5000;
-                        } elseif ($data->sale_ha > 300000) {
-                            $data->extra_ha = 4500;
-                        } elseif ($data->sale_ha > 280000) {
+                        if ($data->sale_ha > 300000) {
                             $data->extra_ha = 4000;
-                        }elseif ($data->sale_ha > 250000) {
+                        } elseif ($data->sale_ha > 250000) {
                             $data->extra_ha = 3500;
-                        }elseif ($data->sale_ha > 230000) {
-                            $data->extra_ha = 3000;
-                        }elseif ($data->sale_ha > 200000) {
+                        } elseif ($data->sale_ha > 200000) {
                             $data->extra_ha = 2500;
-                        }elseif ($data->sale_ha > 180000) {
-                            $data->extra_ha = 2000;
-                        }elseif ($data->sale_ha >= 150000) {
+                        } elseif ($data->sale_ha > 150000) {
                             $data->extra_ha = 1000;
-                        } else {
+                        }else {
                             $data->extra_ha = 0;
                         }
 
@@ -545,9 +640,13 @@ class ImportController extends Controller
                         }
                         break;
                     case 'Freelance_plus':
-                        $data->com_tv = $data->sale_tv * 0.05;
-                        $data->com_av = $data->sale_av * 0.05;
-                        $data->com_ha = $data->sale_ha * 0.05;
+                        // $data->com_tv = $data->sale_tv * 0.05;
+                        // $data->com_av = $data->sale_av * 0.05;
+                        // $data->com_ha = $data->sale_ha * 0.05;
+                        $data->com_tv = $data->normalcom_tv;
+                        $data->com_av = $data->normalcom_av;
+                        $data->com_ha = $data->normalcom_ha;
+
                         $sale_out = $data->sale_tv + $data->sale_av + $data->sale_ha;
                         if ($sale_out > 250000) {
                             $data->extra_tv = 11000;
@@ -562,6 +661,11 @@ class ImportController extends Controller
                         } else {
                             $data->extra_tv = 0;
                         }
+                        break;
+                    case 'pc_promotion':
+                        $data->com_tv = $data->normalcom_tv;
+                        $data->com_av = $data->normalcom_av;
+                        $data->com_ha = $data->normalcom_ha;
                         break;
                     default:
                         $data->com_tv = 0;
@@ -756,11 +860,82 @@ class ImportController extends Controller
 
     }
 
-    protected function calculateCom($pro_model)
+    public function importprice(Request $request)
     {
-        // Example: Retrieve the commission from tb_product based on pro_model
-        $product = product::where('pro_model', $pro_model)->first();
-        return $product ? $product->com : 0;
+        $request->validate([
+            'excel_file' => 'required|mimes:xls,xlsx|max:10240',
+        ]);
+
+        $var_year = $request->input('var_year');
+        $var_month = $request->input('var_month');
+        $short_month = $request->input('short_month');
+
+        if ($request->hasFile('excel_file')) {
+            $file = $request->file('excel_file');
+            $filename = time() . '-' . $file->getClientOriginalName();
+            $filePath = $file->storeAs('uploads', $filename, 'public');
+
+            // Load the spreadsheet from the uploaded file
+            $spreadsheet = IOFactory::load($file->getPathname());
+            
+            foreach ($spreadsheet->getAllSheets() as $sheet) {
+                $sheetData = $sheet->toArray(null, true, true, true);
+
+                foreach ($sheetData as $key => $row) {
+                    if ($key > 1 && $row['D'] != 'Type') { // Skip headers
+                        $data = [
+                            'barcode' => $row['B'],
+                            'item_des' => $row['C'],
+                            'type' => $row['D'],
+                            'price_day1' => $row['E'],
+                            'price_day2' => $row['F'],
+                            'price_day3' => $row['G'],
+                            'price_day4' => $row['H'],
+                            'price_day5' => $row['I'],
+                            'price_day6' => $row['J'],
+                            'price_day7' => $row['K'],
+                            'price_day8' => $row['L'],
+                            'price_day9' => $row['M'],
+                            'price_day10' => $row['N'],
+                            'price_day11' => $row['O'],
+                            'price_day12' => $row['P'],
+                            'price_day13' => $row['Q'],
+                            'price_day14' => $row['R'],
+                            'price_day15' => $row['S'],
+                            'price_day16' => $row['T'],
+                            'price_day17' => $row['U'],
+                            'price_day18' => $row['V'],
+                            'price_day19' => $row['W'],
+                            'price_day20' => $row['X'],
+                            'price_day21' => $row['Y'],
+                            'price_day22' => $row['Z'],
+                            'price_day23' => $row['AA'],
+                            'price_day24' => $row['AB'],
+                            'price_day25' => $row['AC'],
+                            'price_day26' => $row['AD'],
+                            'price_day27' => $row['AE'],
+                            'price_day28' => $row['AF'],
+                            'price_day29' => $row['AG'],
+                            'price_day30' => $row['AH'],
+                            'price_day31' => $row['AI'],
+                        ];
+
+                        Price::updateOrCreate(
+                            [
+                                'item_number' => $row['A'],
+                                'as_of_month' => $var_month,
+                                'as_of_year' => $var_year
+                            ], // Unique key to check
+                            $data // Data to update/create
+                        );
+                    }
+                }
+            }
+
+            return redirect()->route('commissions.index')->with('success', 'Data imported successfully');
+        }
+
+        return redirect()->back()->withErrors(['error' => 'Invalid data format']);
     }
 
 }
