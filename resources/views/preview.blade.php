@@ -13,81 +13,113 @@
             <table id="data-table" class="table table-bordered">
                 <thead>
                     <tr>
-                        <th>Report Code</th>
-                        <th>Supplier Code</th>
-                        <th>Business Format</th>
-                        <th>Compare</th>
-                        <th>Store ID</th>
-                        <th>Store</th>
-                        <th>As of Month</th>
-                        <th>As of Year</th>
-                        <th>Last Year Compare Month</th>
-                        <th>Report Date</th>
-                        <th>Division</th>
-                        <th>Department</th>
-                        <th>Subdepartment</th>
-                        <th>Pro Class</th>
-                        <th>Sub Pro Class</th>
-                        <th>Barcode</th>
-                        <th>Article</th>
-                        <th>Article Name</th>
-                        <th>Brand</th>
-                        <th>Pro Model</th>
-                        <th>Sale Amt TY</th>
-                        <th>Sale Amt LY</th>
-                        <th>Sale Amt Var</th>
-                        <th>Sale Qty TY</th>
-                        <th>Sale Qty LY</th>
-                        <th>Sale Qty Var</th>
-                        <th>Stock TY</th>
-                        <th>Stock LY</th>
-                        <th>Stock Var</th>
-                        <th>Stock Qty TY</th>
-                        <th>Stock Qty LY</th>
-                        <th>Stock Qty Var</th>
-                        <th>Day on Hand TY</th>
-                        <th>Day on Hand LY</th>
-                        <th>Day on Hand Diff</th>
+                        <th>supplier_number</th>
+                        <th>location_number</th>
+                        <th>location_name</th>
+                        <th>class_number</th>
+                        <th>sub_class</th>
+                        <th>item_number</th>
+                        <th>barcode</th>
+                        <th>as_of_month</th>
+                        <th>as_of_year</th>
+                        <th>item_des</th>
+                        <th>eoh_qty</th>
+                        <th>on_order</th>
+                        <th>pack_type</th>
+                        <th>unit</th>
+                        <th>avg_net_sale_qty</th>
+                        <th>net_sale_qty_ytd</th>
+                        <th>last_receved_date</th>
+                        <th>last_sold_date</th>
+                        <th>stock_cover_day</th>
+                        <th>net_sale_qty_mtd</th>
+                        <th>day1</th>
+                        <th>day2</th>
+                        <th>day3</th>
+                        <th>day4</th>
+                        <th>day5</th>
+                        <th>day6</th>
+                        <th>day7</th>
+                        <th>day8</th>
+                        <th>day9</th>
+                        <th>day10</th>
+                        <th>day11</th>
+                        <th>day12</th>
+                        <th>day13</th>
+                        <th>day14</th>
+                        <th>day15</th>
+                        <th>day16</th>
+                        <th>day17</th>
+                        <th>day18</th>
+                        <th>day19</th>
+                        <th>day20</th>
+                        <th>day21</th>
+                        <th>day22</th>
+                        <th>day23</th>
+                        <th>day24</th>
+                        <th>day25</th>
+                        <th>day26</th>
+                        <th>day27</th>
+                        <th>day28</th>
+                        <th>day29</th>
+                        <th>day30</th>
+                        <th>day31</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach ($data as $index => $row)
                         <tr>
-                            <td>{{ $row['report_code'] }}</td>
-                            <td>{{ $row['suppliercode'] }}</td>
-                            <td>{{ $row['business_format'] }}</td>
-                            <td>{{ $row['compare'] }}</td>
-                            <td>{{ $row['store_id'] }}</td>
-                            <td>{{ $row['store'] }}</td>
+                            <td>{{ $row['supplier_number'] }}</td>
+                            <td>{{ $row['location_number'] }}</td>
+                            <td>{{ $row['location_name'] }}</td>
+                            <td>{{ $row['class_number'] }}</td>
+                            <td>{{ $row['sub_class'] }}</td>
+                            <td>{{ $row['item_number'] }}</td>
+                            <td>{{ $row['barcode'] }}</td>
                             <td>{{ $row['as_of_month'] }}</td>
                             <td>{{ $row['as_of_year'] }}</td>
-                            <td>{{ $row['last_year_compare_month'] }}</td>
-                            <td>{{ $row['report_date'] }}</td>
-                            <td>{{ $row['division'] }}</td>
-                            <td>{{ $row['department'] }}</td>
-                            <td>{{ $row['subdepartment'] }}</td>
-                            <td>{{ $row['pro_Class'] }}</td>
-                            <td>{{ $row['sub_pro_class'] }}</td>
-                            <td>{{ $row['barcode'] }}</td>
-                            <td>{{ $row['article'] }}</td>
-                            <td>{{ $row['article_name'] }}</td>
-                            <td>{{ $row['brand'] }}</td>
-                            <td>{{ $row['pro_model'] }}</td>
-                            <td>{{ $row['sale_amt_ty'] }}</td>
-                            <td>{{ $row['sale_amt_ly'] }}</td>
-                            <td>{{ $row['sale_amt_var'] }}</td>
-                            <td>{{ $row['sale_qty_ty'] }}</td>
-                            <td>{{ $row['sale_qty_ly'] }}</td>
-                            <td>{{ $row['sale_qty_var'] }}</td>
-                            <td>{{ $row['stock_ty'] }}</td>
-                            <td>{{ $row['stock_ly'] }}</td>
-                            <td>{{ $row['stock_var'] }}</td>
-                            <td>{{ $row['stock_qty_ty'] }}</td>
-                            <td>{{ $row['stock_qty_ly'] }}</td>
-                            <td>{{ $row['stock_qty_var'] }}</td>
-                            <td>{{ $row['day_on_hand_ty'] }}</td>
-                            <td>{{ $row['day_on_hand_ly'] }}</td>
-                            <td>{{ $row['day_on_hand_diff'] }}</td>
+                            <td>{{ $row['item_des'] }}</td>
+                            <td>{{ $row['eoh_qty'] }}</td>
+                            <td>{{ $row['on_order'] }}</td>
+                            <td>{{ $row['pack_type'] }}</td>
+                            <td>{{ $row['unit'] }}</td>
+                            <td>{{ $row['avg_net_sale_qty'] }}</td>
+                            <td>{{ $row['net_sale_qty_ytd'] }}</td>
+                            <td>{{ $row['last_receved_date'] }}</td>
+                            <td>{{ $row['last_sold_date'] }}</td>
+                            <td>{{ $row['stock_cover_day'] }}</td>
+                            <td>{{ $row['net_sale_qty_mtd'] }}</td>
+                            <td>{{ $row['day1'] }}</td>
+                            <td>{{ $row['day2'] }}</td>
+                            <td>{{ $row['day3'] }}</td>
+                            <td>{{ $row['day4'] }}</td>
+                            <td>{{ $row['day5'] }}</td>
+                            <td>{{ $row['day6'] }}</td>
+                            <td>{{ $row['day7'] }}</td>
+                            <td>{{ $row['day8'] }}</td>
+                            <td>{{ $row['day9'] }}</td>
+                            <td>{{ $row['day10'] }}</td>
+                            <td>{{ $row['day11'] }}</td>
+                            <td>{{ $row['day12'] }}</td>
+                            <td>{{ $row['day13'] }}</td>
+                            <td>{{ $row['day14'] }}</td>
+                            <td>{{ $row['day15'] }}</td>
+                            <td>{{ $row['day16'] }}</td>
+                            <td>{{ $row['day17'] }}</td>
+                            <td>{{ $row['day18'] }}</td>
+                            <td>{{ $row['day19'] }}</td>
+                            <td>{{ $row['day20'] }}</td>
+                            <td>{{ $row['day21'] }}</td>
+                            <td>{{ $row['day22'] }}</td>
+                            <td>{{ $row['day23'] }}</td>
+                            <td>{{ $row['day24'] }}</td>
+                            <td>{{ $row['day25'] }}</td>
+                            <td>{{ $row['day26'] }}</td>
+                            <td>{{ $row['day27'] }}</td>
+                            <td>{{ $row['day28'] }}</td>
+                            <td>{{ $row['day29'] }}</td>
+                            <td>{{ $row['day30'] }}</td>
+                            <td>{{ $row['day31'] }}</td>
                         </tr>
                     @endforeach
                 </tbody>
