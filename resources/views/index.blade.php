@@ -45,13 +45,14 @@
         <table class="table table-bordered table-striped">
             <thead>
                 <tr>
-                    <th width="10%">Month</th>
-                    <th width="20%">Upload</th>
-                    <th width="13%">Sale In</th>
-                    <th width="13%">Sale Out</th>
-                    <th width="14%">Commission</th>
+                    <th width="8%">Month</th>
+                    <th width="15%">Upload</th>
+                    <th width="8%">Sale In</th>
+                    <th width="12%">Price</th>
+                    <th width="12%">Sale Out</th>
+                    <th width="12%">Commission</th>
                     <th width="15%">Target</th>
-                    <th width="15%">Status</th>
+                    <th width="18%">Status</th>
                 </tr>
             </thead>
             <tbody>
@@ -76,10 +77,10 @@
                             <a href="{{ $data['disabled'] ? '#' : $data['import_link'] }}" 
                             class="{{ $data['disabled'] ? 'disabled' : '' }}"
                             style="{{ $data['disabled'] ? 'pointer-events: none; color: gray;' : '' }}">
-                            <img src="{{ asset('import.jpg') }}" width="17" height="17" alt="Import"> Upload
+                            <button type="button" class="btn btn-outline-primary"><img src="{{ asset('import.jpg') }}" width="17" height="17" alt="Import"> Upload</button>
                             </a>
                             @else
-                            <img src="{{ asset('import.jpg') }}" width="17" height="17" alt="Import"> Upload
+                            <button type="button" class="btn btn-outline-primary"><img src="{{ asset('import.jpg') }}" width="17" height="17" alt="Import"> Upload</button>
                             @endif
                         </td>
                         <td>
@@ -91,6 +92,17 @@
                             <button type="button" class="btn btn-primary">
                                 {{ number_format($data['sale_in'], 0) }}
                             </button>
+                            @endif
+                        </td>
+                        <td>
+                            @if(in_array('Upload_price', $permissions))
+                            <a href="{{ $data['disabled'] ? '#' : $data['price_link'] }}" 
+                            class="{{ $data['disabled'] ? 'disabled' : '' }}"
+                            style="{{ $data['disabled'] ? 'pointer-events: none; color: gray;' : '' }}">
+                            <button type="button" class="btn btn-outline-success"><img src="{{ asset('money.png') }}" width="35" height="28" alt="Import_price"> Price</button>
+                            </a>
+                            @else
+                            <button type="button" class="btn btn-outline-success"><img src="{{ asset('money.png') }}" width="24" height="24" alt="Import_price"> Price</button>
                             @endif
                         </td>
                         <td>{{ number_format($data['sale_out'], 0) }}</td>
