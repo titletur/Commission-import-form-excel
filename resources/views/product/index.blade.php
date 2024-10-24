@@ -76,21 +76,14 @@
             <thead>
                 <tr>
                     <th>ID</th>
-                    <th>Supplier</th>
-                    <th>Division</th>
-                    <th>Department</th>
-                    <th>Subdepartment</th>
-                    <th>Pro Class</th>
-                    <th>Sub Pro Class</th>
-                    <th>Barcode</th>
-                    <th>Article</th>
-                    <th>Article Name</th>
-                    {{-- <th>Brand</th> --}}
-                    <th>Model</th>
-                    <th>Type Product</th>
-                    <th>Price</th>
-                    <th>Price(vat)</th>
-                    <th>Com</th>
+                    <th>supplier number</th>
+                    <th>item number</th>
+                    <th>barcode</th>
+                    <th>item Description</th>
+                    <th>type product</th>
+                    <th>pack_type</th>
+                    <th>price(vat)</th>
+                    <th>com</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -100,34 +93,23 @@
                 @endphp
                 @foreach($products as $product)
                     <tr>
-                        {{-- <td>{{ $product->id }}</td> --}}
                         <td>{{ $i++; }}</td>
-                        <td>{{ $product->suppliercode }}</td>
-                        <td>{{ $product->division }}</td>
-                        <td>{{ $product->department }}</td>
-                        <td>{{ $product->subdepartment }}</td>
-                        <td>{{ $product->pro_class }}</td>
-                        <td>{{ $product->sub_pro_class }}</td>
+                        <td>{{ $product->supplier_number }}</td>
+                        <td>{{ $product->item_number }}</td>
                         <td>{{ $product->barcode }}</td>
-                        <td>{{ $product->article }}</td>
-                        <td>{{ $product->article_name }}</td>
-                        {{-- <td>{{ $product->brand }}</td> --}}
-                        <td>{{ $product->pro_model }}</td>
+                        <td>{{ $product->item_des }}</td>
                         <td>{{ $product->type_product }}</td>
-                        <td>{{ $product->price }}</td>
+                        <td>{{ $product->pack_type }}</td>
                         <td>{{ $product->price_vat }}</td>
                         <td>{{ $product->com }}</td>
                         <td>
                             @if($editMode && in_array('Edit_product', $permissions))
                             <button class="btn btn-warning edit-btn" 
-                            data-id="{{ $product->id }}" data-suppliercode="{{ $product->suppliercode }}" 
-                            data-division="{{ $product->division }}" data-department="{{ $product->department }}" 
-                            data-subdepartment="{{ $product->subdepartment }}" data-pro_class="{{ $product->pro_class }}" 
-                            data-sub_pro_class="{{ $product->sub_pro_class }}" data-barcode="{{ $product->barcode }}"
-                            data-article="{{ $product->article }}" data-article_name="{{ $product->article_name }}"
-                            data-brand="{{ $product->brand }}" data-pro_model="{{ $product->pro_model }}"
-                            data-type_product="{{ $product->type_product }}" data-price="{{ $product->price }}"
-                            data-price_vat="{{ $product->price_vat }}" data-com="{{ $product->com }}">Edit</button>
+                            data-id="{{ $product->id }}" data-supplier_number="{{ $product->supplier_number }}" 
+                            data-item_number="{{ $product->item_number }}" data-barcode="{{ $product->barcode }}" 
+                            data-item_des="{{ $product->item_des }}" data-type_product="{{ $product->type_product }}" 
+                            data-pack_type="{{ $product->pack_type }}" data-price_vat="{{ $product->price_vat }}"
+                            data-com="{{ $product->com }}">Edit</button>
                             &nbsp;
                             @endif
                             @if($editMode && in_array('Del_product', $permissions))
@@ -154,32 +136,12 @@
                         <div class="container-fluid">
                             <div class="row">
                                 <div class="col-md-6 mb-3">
-                                    <label for="add_supplier_code" class="form-label">Supplier</label>
-                                    <input type="text" class="form-control" id="add_supplier_code" name="supplier_code" >
+                                    <label for="add_supplier_number" class="form-label">Supplier number</label>
+                                    <input type="text" class="form-control" id="add_supplier_number" name="supplier_number" >
                                 </div>
                                 <div class="col-md-6 mb-3">
-                                    <label for="add_division" class="form-label">Division</label>
-                                    <input type="text" class="form-control" id="add_division" name="division" >
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label for="add_department" class="form-label">Department</label>
-                                    <input type="text" class="form-control" id="add_department" name="department" >
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label for="add_subdepartment" class="form-label">Subdepartment</label>
-                                    <input type="text" class="form-control" id="add_subdepartment" name="subdepartment" >
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label for="add_pro_class" class="form-label">Pro Class</label>
-                                    <input type="text" class="form-control" id="add_pro_class" name="pro_class" >
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label for="add_sub_pro_class" class="form-label">Sub Pro Class</label>
-                                    <input type="text" class="form-control" id="add_sub_pro_class" name="sub_pro_class" >
+                                    <label for="add_item_number" class="form-label">item number</label>
+                                    <input type="text" class="form-control" id="add_item_number" name="item_number" >
                                 </div>
                             </div>
                             <div class="row">
@@ -188,53 +150,35 @@
                                     <input type="text" class="form-control" id="add_barcode" name="barcode" >
                                 </div>
                                 <div class="col-md-6 mb-3">
-                                    <label for="add_article" class="form-label">Article</label>
-                                    <input type="text" class="form-control" id="add_article" name="article" >
+                                    <label for="add_item_des" class="form-label">item Description</label>
+                                    <input type="text" class="form-control" id="add_item_des" name="item_des" >
                                 </div>
                             </div>
                             <div class="row">
                                 <div class="col-md-6 mb-3">
-                                    <label for="add_article_name" class="form-label">Article Name</label>
-                                    <input type="text" class="form-control" id="add_article_name" name="article_name" >
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label for="add_brand" class="form-label">Brand</label>
-                                    <input type="text" class="form-control" id="add_brand" name="brand" >
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label for="add_pro_model" class="form-label">Model</label>
-                                    <input type="text" class="form-control" id="add_pro_model" name="pro_model" required>
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label for="add_type_product" class="form-label">Type Product</label>
-                                    {{-- <input type="text" class="form-control" id="add_type_product" name="type_product" required> --}}
+                                    <label for="add_type_product" class="form-label">Type product</label>
                                     <select id="add_type_product" name="type_product" class="form-control chosen-select" required>
-                                        <option value="">Select Type Product</option>
                                         <option value="TV">TV</option>
                                         <option value="AV">AV</option>
                                         <option value="HA">HA</option>
-                                        <!-- Add more options as needed -->
                                     </select>
                                 </div>
-                            </div>
-                            <div class="row">
                                 <div class="col-md-6 mb-3">
-                                    <label for="add_price" class="form-label">Price</label>
-                                    <input type="text"  class="form-control" id="add_price" name="price" required>
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label for="add_price_vat" class="form-label">Price (VAT)</label>
-                                    <input type="text"  class="form-control" id="add_price_vat" name="price_vat" required>
+                                    <label for="add_pack_type" class="form-label">Pack types</label>
+                                    <input type="text" class="form-control" id="add_pack_type" name="pack_type" >
                                 </div>
                             </div>
                             <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="add_price_vat" class="form-label">Price(Vat)</label>
+                                    <input type="text" class="form-control" id="add_price_vat" name="price_vat" >
+                                </div>
                                 <div class="col-md-6 mb-3">
                                     <label for="add_com" class="form-label">Com</label>
-                                    <input type="text"  class="form-control" id="add_com" name="com" required>
+                                    <input type="text" class="form-control" id="add_com" name="com" >
                                 </div>
                             </div>
+
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -262,32 +206,12 @@
                         <div class="container-fluid">
                             <div class="row">
                                 <div class="col-md-6 mb-3">
-                                    <label for="supplier_code" class="form-label">Supplier</label>
-                                    <input type="text" class="form-control" id="supplier_code" name="supplier_code" >
+                                    <label for="supplier_number" class="form-label">Supplier number</label>
+                                    <input type="text" class="form-control" id="supplier_number" name="supplier_number" >
                                 </div>
                                 <div class="col-md-6 mb-3">
-                                    <label for="division" class="form-label">Division</label>
-                                    <input type="text" class="form-control" id="division" name="division" >
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label for="department" class="form-label">Department</label>
-                                    <input type="text" class="form-control" id="department" name="department" >
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label for="subdepartment" class="form-label">Subdepartment</label>
-                                    <input type="text" class="form-control" id="subdepartment" name="subdepartment" >
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label for="pro_class" class="form-label">Pro Class</label>
-                                    <input type="text" class="form-control" id="pro_class" name="pro_class" >
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label for="sub_pro_class" class="form-label">Sub Pro Class</label>
-                                    <input type="text" class="form-control" id="sub_pro_class" name="sub_pro_class" >
+                                    <label for="item_number" class="form-label">item number</label>
+                                    <input type="text" class="form-control" id="item_number" name="item_number" >
                                 </div>
                             </div>
                             <div class="row">
@@ -296,52 +220,35 @@
                                     <input type="text" class="form-control" id="barcode" name="barcode" >
                                 </div>
                                 <div class="col-md-6 mb-3">
-                                    <label for="article" class="form-label">Article</label>
-                                    <input type="text" class="form-control" id="article" name="article" >
+                                    <label for="item_des" class="form-label">item Description</label>
+                                    <input type="text" class="form-control" id="item_des" name="item_des" >
                                 </div>
                             </div>
                             <div class="row">
                                 <div class="col-md-6 mb-3">
-                                    <label for="article_name" class="form-label">Article Name</label>
-                                    <input type="text" class="form-control" id="article_name" name="article_name" >
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label for="brand" class="form-label">Brand</label>
-                                    <input type="text" class="form-control" id="brand" name="brand" >
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label for="pro_model" class="form-label">Model</label>
-                                    <input type="text" class="form-control" id="pro_model" name="pro_model" required>
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label for="type_product" class="form-label">Type Product</label>
-                                    {{-- <input type="text" class="form-control" id="type_product" name="type_product" required> --}}
+                                    <label for="type_product" class="form-label">Type product</label>
                                     <select id="type_product" name="type_product" class="form-control chosen-select" required>
                                         <option value="TV">TV</option>
                                         <option value="AV">AV</option>
                                         <option value="HA">HA</option>
-                                        <!-- Add more options as needed -->
                                     </select>
                                 </div>
-                            </div>
-                            <div class="row">
                                 <div class="col-md-6 mb-3">
-                                    <label for="price" class="form-label">Price</label>
-                                    <input type="text"  class="form-control" id="price" name="price" required>
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label for="price_vat" class="form-label">Price (VAT)</label>
-                                    <input type="text"  class="form-control" id="price_vat" name="price_vat" required>
+                                    <label for="pack_type" class="form-label">Pack types</label>
+                                    <input type="text" class="form-control" id="pack_type" name="pack_type" >
                                 </div>
                             </div>
                             <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="price_vat" class="form-label">Price(Vat)</label>
+                                    <input type="text" class="form-control" id="price_vat" name="price_vat" >
+                                </div>
                                 <div class="col-md-6 mb-3">
                                     <label for="com" class="form-label">Com</label>
-                                    <input type="text"  class="form-control" id="com" name="com" required>
+                                    <input type="text" class="form-control" id="com" name="com" >
                                 </div>
                             </div>
+
                         </div>
                     </div>
                     <input type="hidden" id="product_id_hidden" name="id">
@@ -392,36 +299,21 @@
             // Edit button click event
             $('.edit-btn').on('click', function() {
                 var id = $(this).data('id');
-                var suppliercode = $(this).data('suppliercode');
-                var division = $(this).data('division');
-                var department = $(this).data('department');
-                var subdepartment = $(this).data('subdepartment');
-                var pro_class = $(this).data('pro_class');
-                var sub_pro_class = $(this).data('sub_pro_class');
+                var supplier_number = $(this).data('supplier_number');
+                var item_number = $(this).data('item_number');
                 var barcode = $(this).data('barcode');
-                var article = $(this).data('article');
-                var article_name = $(this).data('article_name');
-                var brand = $(this).data('brand');
-                var pro_model = $(this).data('pro_model');
+                var item_des = $(this).data('item_des');
+                var pack_type = $(this).data('pack_type');
                 var type_product = $(this).data('type_product');
-                var price = $(this).data('price');
                 var price_vat = $(this).data('price_vat');
                 var com = $(this).data('com');
 
-                $('#supplier_code').val(suppliercode);
-                $('#division').val(division);
-                $('#department').val(department);
-                $('#subdepartment').val(subdepartment);
-                $('#pro_class').val(pro_class);
-                $('#sub_pro_class').val(sub_pro_class);
+                $('#supplier_number').val(supplier_number);
+                $('#item_number').val(item_number);
                 $('#barcode').val(barcode);
-
-                $('#article').val(article);
-                $('#article_name').val(article_name);
-                $('#brand').val(brand);
-                $('#pro_model').val(pro_model);
+                $('#item_des').val(item_des);
+                $('#pack_type').val(pack_type);
                 $('#type_product').val(type_product).trigger("chosen:updated");
-                $('#price').val(price);
                 $('#price_vat').val(price_vat);
                 $('#com').val(com);
                 $('#product_id_hidden').val(id);
