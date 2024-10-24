@@ -40,6 +40,7 @@
                                 <option value="PC_HA" {{ $pc->type_pc == 'PC_HA' ? 'selected' : '' }}>PC HA</option>
                                 <option value="Freelance" {{ $pc->type_pc == 'Freelance' ? 'selected' : '' }}>Freelance</option>
                                 <option value="Freelance_plus" {{ $pc->type_pc == 'Freelance_plus' ? 'selected' : '' }}>Freelance plus</option>
+                                <option value="PC_pomotion" {{ $pc->type_pc == 'PC_pomotion' ? 'selected' : '' }}>PC pomotion</option>
                                 <option value="No PC" {{ $pc->type_pc == 'No PC' ? 'selected' : '' }}>No PC</option>
                             </select>
                         </td>
