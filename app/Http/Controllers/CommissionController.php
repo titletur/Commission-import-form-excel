@@ -10,6 +10,7 @@ use App\Models\tb_status;
 use App\Models\tb_pc;
 use App\Models\tb_month;
 use App\Models\product;
+use App\Models\Price;
 use App\Models\tb_sale;
 use App\Models\tb_sub_sale;
 use App\Models\Sale_in;
@@ -41,8 +42,9 @@ class CommissionController extends Controller
                 'sale_in' => Sale_in::where('month', $month->var_month)->where('year', $year)->sum('sale_in'),
                 'sale_out' => main_commission::where('as_of_month', $month->var_month)->where('as_of_year', $year)->sum('sale_total'),
                 'pay_com' => main_commission::where('as_of_month', $month->var_month)->where('as_of_year', $year)->sum('net_pay'),
-                'target_link' => route('editTarget', [ 'year' => $year, 'month' => $month->short_en , 'var_month' => $month->var_month]), 
-                'import_link' => route('import', ['year' => $year, 'month' => $month->short_en , 'var_month' => $month->var_month]),
+                'price_link' => route('import_price', [ 'year' => $year, 'month' => $month->short_en , 'var_month' => $month->var_month]), 
+                'target_link' => route('editTarget', [ 'year' => $year, 'month' => $month->short_en , 'var_month' => $month->var_month]),
+                'import_link' => route('import', ['year' => $year, 'month' => $month->month_en , 'var_month' => $month->var_month]),
                 'show_link' => route('commissions.show', ['year' => $year, 'month' => $month->short_en , 'var_month' => $month->var_month]),
 
                 'status' => $status ? $status->status_com : 0,
@@ -530,6 +532,163 @@ class CommissionController extends Controller
     //     return view('commissions.edit_data_pc', compact('commissions','main_commission', 'store_id', 'id_pc', 'month', 'var_month', 'year', 'pc_info'));
     // }
     // Controller (Updated)
+    public function exportprice(Request $request)
+    {
+
+        $var_month = $request->input('var_month');
+        $short_month = $request->input('short_month');
+        $year = $request->input('var_year');
+        $type = $request->input('type');
+
+        $products = DB::table('tb_product')
+        ->select('item_number', 'barcode', 'item_des', 'type_product', 'price_vat')
+        ->whereNull('status_product')
+        ->get();
+
+        $product_prices = $products->map(function($product) use ($var_month, $year) {
+            // ดึงข้อมูลจาก tb_price ตาม item_number และเงื่อนไขเดือนและปี
+            $price = DB::table('tb_price')
+                ->select('price_day1', 'price_day2', 'price_day3', 'price_day4', 'price_day5', 
+                         'price_day6', 'price_day7', 'price_day8', 'price_day9', 'price_day10', 
+                         'price_day11', 'price_day12', 'price_day13', 'price_day14', 'price_day15', 
+                         'price_day16', 'price_day17', 'price_day18', 'price_day19', 'price_day20', 
+                         'price_day21', 'price_day22', 'price_day23', 'price_day24', 'price_day25', 
+                         'price_day26', 'price_day27', 'price_day28', 'price_day29', 'price_day30', 'price_day31')
+                ->where('item_number', $product->item_number)
+                ->where('as_of_month', $var_month)
+                ->where('as_of_year', $year)
+                ->first();
+            
+            if (!$price) {
+                $price = (object) [
+                    'price_day1' => null, 'price_day2' => null, 'price_day3' => null, 'price_day4' => null, 'price_day5' => null,
+                    'price_day6' => null, 'price_day7' => null, 'price_day8' => null, 'price_day9' => null, 'price_day10' => null,
+                    'price_day11' => null, 'price_day12' => null, 'price_day13' => null, 'price_day14' => null, 'price_day15' => null,
+                    'price_day16' => null, 'price_day17' => null, 'price_day18' => null, 'price_day19' => null, 'price_day20' => null,
+                    'price_day21' => null, 'price_day22' => null, 'price_day23' => null, 'price_day24' => null, 'price_day25' => null,
+                    'price_day26' => null, 'price_day27' => null, 'price_day28' => null, 'price_day29' => null, 'price_day30' => null,
+                    'price_day31' => null,
+                ];
+            }
+    
+            // รวมข้อมูล product และ price (ถ้าไม่มีข้อมูล price ให้ใช้ null)
+            return (object) array_merge((array) $product, (array) $price);
+        });
+
+        if ($type === 'excel') {
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Product Price');
+
+        // กำหนดหัวข้อของตาราง
+        $header = [
+            'item number', 'Barcode', 'Description', 'Type', 'Day1','Day2','Day3','Day4','Day5','Day6','Day7','Day8','Day9','Day10','Day11'
+            ,'Day12','Day13','Day14','Day15','Day16','Day17','Day18','Day19','Day20','Day21','Day22','Day23','Day24','Day25','Day26','Day27','Day28','Day29','Day30','Day31'
+        ];
+
+        // ตั้งค่า header
+        $sheet->fromArray($header, NULL, 'A1');
+        $sheet->getColumnDimension('A')->setWidth(10); 
+        $sheet->getColumnDimension('B')->setWidth(10); 
+        $sheet->getColumnDimension('C')->setWidth(20); 
+        $sheet->getColumnDimension('D')->setWidth(10); 
+        $sheet->getColumnDimension('E')->setWidth(7); 
+        $sheet->getColumnDimension('F')->setWidth(7); 
+        $sheet->getColumnDimension('G')->setWidth(7); 
+        $sheet->getColumnDimension('H')->setWidth(7); 
+        $sheet->getColumnDimension('I')->setWidth(7); 
+        $sheet->getColumnDimension('J')->setWidth(7); 
+        $sheet->getColumnDimension('K')->setWidth(7); 
+        $sheet->getColumnDimension('L')->setWidth(7); 
+        $sheet->getColumnDimension('M')->setWidth(7); 
+        $sheet->getColumnDimension('N')->setWidth(7); 
+        $sheet->getColumnDimension('O')->setWidth(7); 
+        $sheet->getColumnDimension('P')->setWidth(7); 
+        $sheet->getColumnDimension('Q')->setWidth(7); 
+        $sheet->getColumnDimension('R')->setWidth(7); 
+        $sheet->getColumnDimension('S')->setWidth(7); 
+        $sheet->getColumnDimension('T')->setWidth(7); 
+        $sheet->getColumnDimension('U')->setWidth(7); 
+        $sheet->getColumnDimension('V')->setWidth(7); 
+        $sheet->getColumnDimension('W')->setWidth(7); 
+        $sheet->getColumnDimension('X')->setWidth(7); 
+        $sheet->getColumnDimension('Y')->setWidth(7); 
+        $sheet->getColumnDimension('Z')->setWidth(7); 
+        $sheet->getColumnDimension('AA')->setWidth(7); 
+        $sheet->getColumnDimension('AB')->setWidth(7); 
+        $sheet->getColumnDimension('AC')->setWidth(7); 
+        $sheet->getColumnDimension('AE')->setWidth(7); 
+        $sheet->getColumnDimension('AF')->setWidth(7); 
+        $sheet->getColumnDimension('AG')->setWidth(7); 
+        $sheet->getColumnDimension('AH')->setWidth(7); 
+        $sheet->getColumnDimension('AI')->setWidth(7); 
+
+        // กรอกข้อมูล commissions
+        $row = 2; // เริ่มที่แถวที่ 2 เนื่องจากแถวที่ 1 เป็นหัวข้อ
+        foreach ($product_prices as $product_price) {
+            $sheet->setCellValue('A' . $row, $product_price->item_number);
+            $sheet->setCellValue('B' . $row, $product_price->barcode);
+            $sheet->setCellValue('C' . $row, $product_price->item_des);
+            $sheet->setCellValue('D' . $row, $product_price->type_product);
+            $sheet->setCellValue('E' . $row, $product_price->price_day1);
+            $sheet->setCellValue('F' . $row, $product_price->price_day2);
+            $sheet->setCellValue('G' . $row, $product_price->price_day3);
+            $sheet->setCellValue('H' . $row, $product_price->price_day4);
+            $sheet->setCellValue('I' . $row, $product_price->price_day5);
+            $sheet->setCellValue('J' . $row, $product_price->price_day6);
+            $sheet->setCellValue('K' . $row, $product_price->price_day7);
+            $sheet->setCellValue('L' . $row, $product_price->price_day8);
+            $sheet->setCellValue('M' . $row, $product_price->price_day9);
+            $sheet->setCellValue('N' . $row, $product_price->price_day10);
+            $sheet->setCellValue('O' . $row, $product_price->price_day11);
+            $sheet->setCellValue('P' . $row, $product_price->price_day12);
+            $sheet->setCellValue('Q' . $row, $product_price->price_day13);
+            $sheet->setCellValue('R' . $row, $product_price->price_day14);
+            $sheet->setCellValue('S' . $row, $product_price->price_day15);
+            $sheet->setCellValue('T' . $row, $product_price->price_day16);
+            $sheet->setCellValue('U' . $row, $product_price->price_day17);
+            $sheet->setCellValue('V' . $row, $product_price->price_day18);
+            $sheet->setCellValue('W' . $row, $product_price->price_day19);
+            $sheet->setCellValue('X' . $row, $product_price->price_day20);
+            $sheet->setCellValue('Y' . $row, $product_price->price_day21);
+            $sheet->setCellValue('Z' . $row, $product_price->price_day22);
+            $sheet->setCellValue('AA' . $row, $product_price->price_day23);
+            $sheet->setCellValue('AB' . $row, $product_price->price_day24);
+            $sheet->setCellValue('AC' . $row, $product_price->price_day25);
+            $sheet->setCellValue('AD' . $row, $product_price->price_day26);
+            $sheet->setCellValue('AE' . $row, $product_price->price_day27);
+            $sheet->setCellValue('AF' . $row, $product_price->price_day28);
+            $sheet->setCellValue('AG' . $row, $product_price->price_day29);
+            $sheet->setCellValue('AH' . $row, $product_price->price_day30);
+            $sheet->setCellValue('AI' . $row, $product_price->price_day31);
+            $row++;
+        }
+
+
+        // จัดการ download ไฟล์
+        $filename = "product_price.xlsx";
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment;filename="' . $filename . '"');
+        header('Cache-Control: max-age=0');
+
+        $writer = new Xlsx($spreadsheet);
+        $writer->save('php://output');
+
+        } elseif ($type === 'pdf') {
+
+            // $mpdf = new Mpdf();
+            // $mpdf->AddPage('L'); // แนวนอน
+            // $mpdf->SetFont('sarabun-regular', '', 14); // ตั้งฟอนต์ที่รองรับภาษาไทย
+
+            // $html = view('commissions.commission_pdf', compact('commissions', 'month', 'year'))->render();
+            // $mpdf->WriteHTML($html);
+            // $mpdf->Output('commissions_' . $month . '_' . $year . '.pdf', 'I');
+            
+        }
+
+        return redirect()->back();
+    }
+
     public function edit(Request $request)
     {
         $store_id = $request->input('store_id');
@@ -537,24 +696,20 @@ class CommissionController extends Controller
         $year = $request->input('year');
         $month = $request->input('month');
 
-
-        // Group by Product Model and sum Sale Quantity and Amounts
         $commissions = Commission::select(
-                                'suppliercode',
-                                'store_id',
-
-                                'pro_model',
-                                'type_product',
-                                'sale_amt',
-                                'sale_amt_vat',
-                                'com',
-                                DB::raw('SUM(sale_qty) as total_sale_qty')
-                            )
-                            ->where('store_id', $store_id)
-                            ->where('as_of_month', $var_month)
-                            ->where('as_of_year', $year)
-                            ->groupBy('pro_model', 'suppliercode', 'store_id',  'type_product','sale_amt','sale_amt_vat','com')
-                            ->get();
+            'supplier_number',
+            'store_id',
+            'item_number',
+            'type_product',
+            'sale_total',
+            'com',
+            DB::raw('SUM(sale_qty) as total_sale_qty')
+        )
+        ->where('store_id', $store_id)
+        ->where('as_of_month', $var_month)
+        ->where('as_of_year', $year)
+        ->groupBy('item_number', 'supplier_number', 'store_id', 'type_product', 'sale_total', 'com')
+        ->get();
 
         // Query PC information in the store
         $pcs = DB::table('tb_pc')->where('store_id', $store_id)
@@ -1102,6 +1257,84 @@ class CommissionController extends Controller
         return view('edit_target', compact('pcs', 'year', 'month','var_month'));
     }
 
+    public function import_price($year, $month,$var_month)
+    {
+        // Query all PC records from tb_pc
+        $product_prices = DB::table('tb_product')
+        ->leftJoin('tb_price', 'tb_product.item_number', '=', 'tb_price.item_number')
+        ->select(
+            'tb_product.item_number', 
+            'tb_product.barcode', 
+            'tb_product.item_des', 
+            'tb_product.type_product', 
+            'tb_product.price_vat',
+            'tb_price.as_of_month', 
+            'tb_price.as_of_year',
+            DB::raw('tb_price.price_day1, tb_price.price_day2, tb_price.price_day3,tb_price.price_day4,tb_price.price_day5
+            ,tb_price.price_day6,tb_price.price_day7,tb_price.price_day8,tb_price.price_day9,tb_price.price_day10,tb_price.price_day11
+            ,tb_price.price_day12,tb_price.price_day13,tb_price.price_day14,tb_price.price_day15,tb_price.price_day16,tb_price.price_day17
+            ,tb_price.price_day18,tb_price.price_day19,tb_price.price_day20,tb_price.price_day21,tb_price.price_day22,tb_price.price_day23
+            ,tb_price.price_day24,tb_price.price_day25,tb_price.price_day26,tb_price.price_day27,tb_price.price_day28,tb_price.price_day29
+            ,tb_price.price_day30, tb_price.price_day31') 
+        )
+        ->whereNull('tb_product.status_product')
+        ->where(function($query) use ($var_month, $year) {
+            $query->where('tb_price.as_of_month', '=', $var_month)
+                  ->where('tb_price.as_of_year', '=', $year)
+                  ->orWhereNull('tb_price.as_of_month') // ถ้าไม่มีข้อมูล tb_price ก็จะยังโชว์ข้อมูล tb_product
+                  ->orWhereNull('tb_price.as_of_year');
+
+        })
+        ->get();
+
+        return view('import_price', compact('product_prices', 'year', 'month','var_month'));
+    }
+    public function uploadprice(Request $request)
+    {
+        $var_month = $request->input('var_month');
+        $year = $request->input('year');
+        for ($i = 1; $i <= 31; $i++) {
+            $price_day["price_day{$i}"] = $request->input("price_day{$i}");
+        }
+        // dd($request->all());
+        try{
+            foreach ($price_day['price_day1'] as $item_number => $day1_value) {
+                $data = [
+                    'item_number' => $item_number,
+                    'as_of_month' => $var_month,
+                    'as_of_year' => $year,
+                ];
+    
+                // เพิ่มข้อมูล price_day1 - price_day31 ลงใน array
+                for ($i = 1; $i <= 31; $i++) {
+                    $data["price_day{$i}"] = $price_day["price_day{$i}"][$item_number] ?? 0;
+                }
+    
+                // ตรวจสอบว่ามีข้อมูลใน tb_price สำหรับ item_number นี้หรือยัง
+                $existingPrice = DB::table('tb_price')
+                    ->where('item_number', $item_number)
+                    ->where('as_of_month', $var_month)
+                    ->where('as_of_year', $year)
+                    ->first();
+    
+                if ($existingPrice) {
+                    // ถ้ามีแล้ว ให้ทำการอัปเดต
+                    DB::table('tb_price')
+                        ->where('item_number', $item_number)
+                        ->where('as_of_month', $var_month)
+                        ->where('as_of_year', $year)
+                        ->update($data);
+                } else {
+                    // ถ้ายังไม่มี ให้ทำการสร้างใหม่
+                    DB::table('tb_price')->insert($data);
+                }
+            }
+
+         return redirect()->route('commissions.index')->with('success', 'Product Price updated successfully!');
+        }catch (\Exception $e) {
+        return redirect()->route('commissions.index')->withErrors(['error' => $e->getMessage()]);
+        }
+    }
     protected function calculateCom($pro_model)
     {
         // Example: Retrieve the commission from tb_product based on pro_model
@@ -1112,7 +1345,7 @@ class CommissionController extends Controller
     }
     public function updateTarget(Request $request)
     {
-        // dd($request->all());
+        dd($request->all());
         $targets = $request->input('tarket');
         $type_pcs = $request->input('type_pc');
         $var_month = $request->input('var_month');
