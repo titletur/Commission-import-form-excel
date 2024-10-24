@@ -143,6 +143,7 @@
                                 <option value="PC_HA">PC HA</option>
                                 <option value="Freelance">Freelance</option>
                                 <option value="Freelance_plus">Freelance plus</option>
+                                <option value="PC_promotion">PC Promotion</option>
                                 <option value="No PC">No PC</option>
                                 <!-- Add more options as needed -->
                             </select>
@@ -209,6 +210,7 @@
                                 <option value="PC_HA">PC HA</option>
                                 <option value="Freelance">Freelance</option>
                                 <option value="Freelance_plus">Freelance plus</option>
+                                <option value="PC_promotion">PC Promotion</option>
                                 <option value="No PC">No PC</option>
                                 <!-- Add more options as needed -->
                             </select>
