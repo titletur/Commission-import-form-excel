@@ -29,7 +29,7 @@ Route::middleware(['auth', CheckImportPermission::class])->group(function () {
     Route::get('import', [ImportController::class, 'form'])->name('import.form');
     Route::post('import', [ImportController::class, 'import'])->name('import.import');
     Route::post('import/store', [ImportController::class, 'store'])->name('import.store');
-
+    Route::post('import/price', [ImportController::class, 'importprice'])->name('import.importprice');
 
     // Main page to display the year selection and data for 12 months
     Route::get('index', [CommissionController::class, 'index'])->name('commissions.index');
@@ -58,6 +58,11 @@ Route::middleware(['auth', CheckImportPermission::class])->group(function () {
     Route::get('target/{year}/{month}/{var_month}', [CommissionController::class, 'editTarget'])->name('editTarget');
     Route::post('target/update', [CommissionController::class, 'updateTarget'])->name('updateTarget');
 
+   
+
+    Route::get('import_price/{year}/{month}/{var_month}', [CommissionController::class, 'import_price'])->name('import_price');
+    Route::post('import_price/uploadprice', [CommissionController::class, 'uploadprice'])->name('uploadprice');
+    Route::get('/price/export', [CommissionController::class, 'exportprice'])->name('price.export');
 
     //store manage
     Route::resource('stores', storeController::class)->except(['show']);
