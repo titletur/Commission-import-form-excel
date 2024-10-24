@@ -150,6 +150,10 @@
                                         <label class="form-check-label" for="Upload_file">Upload File</label>
                                     </div>
                                     <div class="form-check">
+                                        &nbsp;&nbsp;&nbsp;<input class="form-check-input" type="checkbox" id="Upload_price" name="permissions[]" value="Upload_price">
+                                        <label class="form-check-label" for="Upload_price">Upload price</label>
+                                    </div>
+                                    <div class="form-check">
                                         &nbsp;&nbsp;&nbsp;<input class="form-check-input" type="checkbox" id="sale_in" name="permissions[]" value="sale_in">
                                         <label class="form-check-label" for="sale_in">Sale IN</label>
                                     </div>
@@ -300,6 +304,10 @@
                                     <div class="form-check">
                                         &nbsp;&nbsp;&nbsp;<input class="form-check-input" type="checkbox" id="Upload_file" name="permissions[]" value="Upload_file">
                                         <label class="form-check-label" for="Upload_file">Upload File</label>
+                                    </div>
+                                    <div class="form-check">
+                                        &nbsp;&nbsp;&nbsp;<input class="form-check-input" type="checkbox" id="Upload_price" name="permissions[]" value="Upload_price">
+                                        <label class="form-check-label" for="Upload_price">Upload price</label>
                                     </div>
                                     <div class="form-check">
                                         &nbsp;&nbsp;&nbsp;<input class="form-check-input" type="checkbox" id="edit_sale_in" name="permissions[]" value="sale_in">
