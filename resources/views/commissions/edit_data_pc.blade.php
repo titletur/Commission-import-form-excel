@@ -90,10 +90,10 @@ $permissions = json_decode(Auth::user()->permissions, true); // แปลง JSO
                 <tbody>
                     @foreach($commissions as $commission)
                         <tr>
-                            <td>{{ $commission->suppliercode }}</td>
+                            <td>{{ $commission->supplier_number }}</td>
                             <td>{{ $commission->store_id }}</td>
                             {{-- <td>{{ $commission->type_store }}</td> --}}
-                            <td>{{ $commission->pro_model }}</td>
+                            <td>{{ $commission->item_number }}</td>
                             <td>{{ $commission->type_product }}</td>
                             <td>{{ number_format($commission->sale_amt, 0) }}</td>
                             <td>{{ number_format($commission->sale_amt_vat, 0) }}</td>
