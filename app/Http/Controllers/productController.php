@@ -37,19 +37,12 @@ class productController extends Controller
     {
         try {
         $request->validate([
-            'suppliercode' => 'nullable|string',
-            'division' => 'nullable|string',
-            'department' => 'nullable|string',
-            'subdepartment' => 'nullable|string',
-            'pro_class' => 'nullable|string',
-            'sub_pro_class' => 'nullable|string',
+            'supplier_number' => 'nullable|string',
+            'item_number' => 'nullable|string',
             'barcode' => 'nullable|string',
-            'article' => 'nullable|string',
-            'article_name' => 'nullable|string',
-            'brand' => 'nullable|string',
-            'pro_model' => 'required|string',
+            'item_des' => 'nullable|string',
+            'pack_type' => 'nullable|string',
             'type_product' => 'nullable|string',
-            'price' => 'nullable|string',
             'price_vat' => 'nullable|string',
             'com' => 'nullable|string',
             
@@ -70,19 +63,12 @@ class productController extends Controller
     {
         try {
         $request->validate([
-            'suppliercode' => 'nullable|string',
-            'division' => 'nullable|string',
-            'department' => 'nullable|string',
-            'subdepartment' => 'nullable|string',
-            'pro_class' => 'nullable|string',
-            'sub_pro_class' => 'nullable|string',
+            'supplier_number' => 'nullable|string',
+            'item_number' => 'nullable|string',
             'barcode' => 'nullable|string',
-            'article' => 'nullable|string',
-            'article_name' => 'nullable|string',
-            'brand' => 'nullable|string',
-            'pro_model' => 'required|string',
+            'item_des' => 'nullable|string',
+            'pack_type' => 'nullable|string',
             'type_product' => 'nullable|string',
-            'price' => 'nullable|string',
             'price_vat' => 'nullable|string',
             'com' => 'nullable|string',
         ]);
@@ -123,11 +109,10 @@ class productController extends Controller
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->setTitle('Product List');
-
         // กำหนดหัวข้อของตาราง
         $header = [
-            'ID', 'Supplier Code', 'Division', 'Department', 'Subdepartment','Pro Class','Sub Pro Class'
-            ,'Barcode','Article','Article Name','Model','Type Product','Price','Price(vat)','Com'
+            'ID', 'Supplier number', 'item number', 'barcode', 'item description','type Product','pack type'
+            ,'price(vat)','com'
         ];
 
         // ตั้งค่า header
@@ -141,33 +126,21 @@ class productController extends Controller
         $sheet->getColumnDimension('G')->setWidth(15); 
         $sheet->getColumnDimension('H')->setWidth(20); 
         $sheet->getColumnDimension('I')->setWidth(10); 
-        $sheet->getColumnDimension('J')->setWidth(20); 
-        // $sheet->getColumnDimension('K')->setWidth(10); 
-        $sheet->getColumnDimension('K')->setWidth(15); 
-        $sheet->getColumnDimension('L')->setWidth(10); 
-        $sheet->getColumnDimension('M')->setWidth(10); 
-        $sheet->getColumnDimension('N')->setWidth(10); 
-        $sheet->getColumnDimension('O')->setWidth(10); 
+        
 
         // กรอกข้อมูล commissions
         $row = 2; // เริ่มที่แถวที่ 2 เนื่องจากแถวที่ 1 เป็นหัวข้อ
         foreach ($products as $product) {
             $sheet->setCellValue('A' . $row, $product->id);
-            $sheet->setCellValue('B' . $row, $product->suppliercode);
-            $sheet->setCellValue('C' . $row, $product->division);
-            $sheet->setCellValue('D' . $row, $product->department);
-            $sheet->setCellValue('E' . $row, $product->subdepartment);
-            $sheet->setCellValue('F' . $row, $product->pro_class);
-            $sheet->setCellValue('G' . $row, $product->sub_pro_class);
-            $sheet->setCellValue('H' . $row, $product->barcode);
-            $sheet->setCellValue('I' . $row, $product->article);
-            $sheet->setCellValue('J' . $row, $product->article_name);
-            // $sheet->setCellValue('K' . $row, $product->brand);
-            $sheet->setCellValue('K' . $row, $product->pro_model);
-            $sheet->setCellValue('L' . $row, $product->type_product);
-            $sheet->setCellValue('M' . $row, $product->price);
-            $sheet->setCellValue('N' . $row, $product->price_vat);
-            $sheet->setCellValue('O' . $row, $product->com);
+            $sheet->setCellValue('B' . $row, $product->supplier_number);
+            $sheet->setCellValue('C' . $row, $product->item_number);
+            $sheet->setCellValue('D' . $row, $product->barcode);
+            $sheet->setCellValue('E' . $row, $product->item_des);
+            $sheet->setCellValue('F' . $row, $product->pack_type);
+            $sheet->setCellValue('G' . $row, $product->type_product);
+            $sheet->setCellValue('H' . $row, $product->price_vat);
+            $sheet->setCellValue('I' . $row, $product->com);
+
             $row++;
         }
 
