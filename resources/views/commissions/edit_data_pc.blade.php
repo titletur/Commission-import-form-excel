@@ -71,106 +71,149 @@ $permissions = json_decode(Auth::user()->permissions, true); // แปลง JSO
         <input type="hidden" name="store_id" value="{{ $store_id }}">
 
         <table class="table table-bordered table-striped">
-                <thead>
+            <thead>
+                <tr>
+                    <th>Supplier number</th>
+                    <th>Store ID</th>
+                    <th>Item number</th>
+                    <th>Type Product</th>
+                    <th>Sale total (VAT)</th>
+                    <th>Price Com</th>
+                    <th>Total Sale Quantity</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($commissions as $commission)
                     <tr>
-                        <th>Supplier Code</th>
-                        <th>Store ID</th>
-                        {{-- <th>Type Store</th> --}}
-                        <th>Product Model</th>
-                        <th>Type Product</th>
-                        <th>Sale Amount</th>
-                        <th>Sale Amount (VAT)</th>
-                        <th>Price Com</th>
-                        <th>Total Sale Quantity</th>
-                        @foreach($pcs as $pc)
-                            <th>{{ $pc->name_pc }}</th>
-                        @endforeach
+                        <td>{{ $commission->supplier_number }}</td>
+                        <td>{{ $commission->store_id }}</td>
+                        <td>{{ $commission->item_number }}</td>
+                        <td>{{ $commission->type_product }}</td>
+                        <td>{{ number_format($commission->sale_total, 0) }}</td>
+                        <td>{{ number_format($commission->com, 0) }}</td>
+                        <td>{{ number_format($commission->total_sale_qty, 0) }}</td>
                     </tr>
-                </thead>
-                <tbody>
-                    @foreach($commissions as $commission)
-                        <tr>
-                            <td>{{ $commission->supplier_number }}</td>
-                            <td>{{ $commission->store_id }}</td>
-                            {{-- <td>{{ $commission->type_store }}</td> --}}
-                            <td>{{ $commission->item_number }}</td>
-                            <td>{{ $commission->type_product }}</td>
-                            <td>{{ number_format($commission->sale_amt, 0) }}</td>
-                            <td>{{ number_format($commission->sale_amt_vat, 0) }}</td>
-                            <td>{{ number_format($commission->com, 0) }}</td>
-                            <td>{{ number_format($commission->total_sale_qty, 0) }}</td>
-                            @foreach($pcs as $pc)
-                                @php
-                                    // Query sale_qty for this product model and PC
-                                    // $pc_sale_qty = DB::table('tb_commission')
-                                    //                  ->where('store_id', $commission->store_id)
-                                    //                  ->where('pro_model', $commission->pro_model)
-                                    //                  ->where('id_pc', $pc->id)
-                                    //                  ->where('as_of_month', $var_month)
-                                    //                  ->where('as_of_year', $year)
-                                    //                  ->sum('sale_qty');
-                                    $pc_sale_qty = DB::table('tb_commission')
-                                        ->join('tb_pc', 'tb_commission.id_pc', '=', 'tb_pc.id') // Join tb_pc on id_pc
-                                        ->where('tb_commission.store_id', $commission->store_id)
-                                        ->where('tb_commission.pro_model', $commission->pro_model)
-                                        ->where('tb_commission.id_pc', $pc->id)
-                                        ->where('tb_commission.as_of_month', $var_month)
-                                        ->where('tb_commission.as_of_year', $year)
-                                        ->whereNull('tb_pc.status_pc') // Where status_pc is null
-                                        ->sum('tb_commission.sale_qty');  // Sum sale_qty from tb_commission
-
-                                @endphp
-                                <td>
-                                    <input type="number" name="pc_qty[{{ $commission->pro_model }}][{{ $pc->id }}]" value="{{ number_format($pc_sale_qty, 0) }}" class="sale-qty-input"/>
-                                </td>
-                            @endforeach
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
+            
+                    <tr>
+                        <td colspan="7">
+                            <table class="table table-sm table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>Total Day</th>
+                                        @for ($i = 1; $i <= 31; $i++)
+                                            <th>D{{ $i }}</th>
+                                        @endfor
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>Sale QTY</td>
+                                        @for ($i = 1; $i <= 31; $i++)
+                                            @php
+                                                $dayField = 'total_day' . $i;
+                                            @endphp
+                                            <td>{{ number_format($commission->$dayField, 0) }}</td>
+                                        @endfor
+                                    </tr>
+                                    
+                                    @foreach($pcs as $pc)
+                                        <tr>
+                                            <td>{{ $pc->name_pc }}</td>
+                                            @for ($i = 1; $i <= 31; $i++)
+                                                <td>
+                                                    <input type="number" 
+                                                           name="pc_qty[{{ $commission->item_number }}][{{ $pc->id }}][day{{ $i }}]" 
+                                                           value="{{ number_format($pcs_sale_qty[$commission->item_number][$pc->id][$i], 0) }}" 
+                                                           class="sale-qty-input form-control"
+                                                           data-total-day="{{ number_format($commission->$dayField, 0) }}"
+                                                           data-day="{{ $i }}">
+                                                </td>
+                                            @endfor
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
+        
+        
+        
             
         @if(in_array('Edit_qty', $permissions))      
         <div align="center">
-        <button type="submit" class="btn btn-primary" id="submit-btn">Update</button>
+            <button id="submit-btn" class="btn btn-primary" >Submit</button>
+            {{-- <button type="submit" class="btn btn-primary" id="submit-btn">Update</button> --}}
         </div>
         @endif
     </form>
 
-    <script>
+    {{-- <script>
         document.addEventListener('DOMContentLoaded', function () {
             const saleQtyInputs = document.querySelectorAll('.sale-qty-input');
             const submitBtn = document.getElementById('submit-btn');
-        
+    
             function validateQuantities() {
                 let isValid = true;
-        
-                saleQtyInputs.forEach(input => {
-                    const row = input.closest('tr');
-                    const totalQty = parseFloat(row.querySelector('td:nth-child(8)').textContent.replace(',', '')) || 0;
-                    let sumQty = 0;
-        
-                    row.querySelectorAll('.sale-qty-input').forEach(input => {
-                        const value = parseFloat(input.value.replace(',', '')) || 0;
-                        sumQty += value;
+    
+                // Loop through each commission row
+                document.querySelectorAll('tbody > tr').forEach(row => {
+                    const totalDays = [];
+                    
+                    // Get item_number from the commission row
+                    const itemNumber = row.cells[2].textContent; // คอลัมน์ Item Number
+    
+                    // Collect total day values for this item_number
+                    const totalDayFields = row.querySelectorAll('td:nth-child(n+5)'); // คอลัมน์จาก Sale Total (VAT) ขึ้นไป
+                    totalDayFields.forEach((totalDayField, index) => {
+                        totalDays[index] = parseFloat(totalDayField.textContent.replace(',', '')) || 0;
                     });
-        
-                    if (sumQty !== totalQty) {
-                        row.style.backgroundColor = 'red';
-                        isValid = false;
-                    } else {
-                        row.style.backgroundColor = '';
-                    }
+    
+                    // Find the corresponding PC rows
+                    const pcsRows = row.nextElementSibling.querySelectorAll('tbody tr');
+                    pcsRows.forEach(pcRow => {
+                        let sumQty = 0;
+    
+                        // Loop over each input for the current item_number and PC
+                        pcRow.querySelectorAll('.sale-qty-input').forEach((input, index) => {
+                            const value = parseFloat(input.value.replace(',', '')) || 0;
+                            sumQty += value;
+    
+                            // Compare the input value to the totalDay for the current item_number
+                            if (value !== totalDays[index]) {
+                                input.style.backgroundColor = 'red'; // เปลี่ยนสีพื้นหลังเป็นสีแดง
+                                isValid = false;
+                            } else {
+                                input.style.backgroundColor = ''; // คืนค่าพื้นหลังเป็นปกติ
+                            }
+                        });
+    
+                        // Optional: Check if the sum of quantities equals the total for the current item_number
+                        const totalQtyField = row.cells[6]; // คอลัมน์ Total Sale Quantity
+                        const totalQty = parseFloat(totalQtyField.textContent.replace(',', '')) || 0;
+                        if (sumQty !== totalQty) {
+                            pcRow.style.backgroundColor = 'red'; // เปลี่ยนสีพื้นหลังของแถว PC ถ้าจำนวนรวมไม่ตรง
+                            isValid = false;
+                        } else {
+                            pcRow.style.backgroundColor = ''; // คืนค่าพื้นหลังเป็นปกติ
+                        }
+                    });
                 });
-        
-                submitBtn.disabled = !isValid;
+    
+                submitBtn.disabled = !isValid; // ปิดปุ่มส่งข้อมูลถ้าทุกค่าไม่ถูกต้อง
             }
-        
+    
+            // Attach input event to each sale quantity input
             saleQtyInputs.forEach(input => {
                 input.addEventListener('input', validateQuantities);
             });
-        
+    
             // Initial validation
             validateQuantities();
         });
-        </script>
+    </script> --}}
+    
+    
 @endsection
