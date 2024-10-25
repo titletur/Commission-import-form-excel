@@ -703,12 +703,43 @@ class CommissionController extends Controller
             'type_product',
             'sale_total',
             'com',
-            DB::raw('SUM(sale_qty) as total_sale_qty')
+            DB::raw('SUM(sale_qty) as total_sale_qty'),
+            DB::raw('SUM(day1) as total_day1'),
+            DB::raw('SUM(day2) as total_day2'),
+            DB::raw('SUM(day3) as total_day3'),
+            DB::raw('SUM(day4) as total_day4'),
+            DB::raw('SUM(day5) as total_day5'),
+            DB::raw('SUM(day6) as total_day6'),
+            DB::raw('SUM(day7) as total_day7'),
+            DB::raw('SUM(day8) as total_day8'),
+            DB::raw('SUM(day9) as total_day9'),
+            DB::raw('SUM(day10) as total_day10'),
+            DB::raw('SUM(day11) as total_day11'),
+            DB::raw('SUM(day12) as total_day12'),
+            DB::raw('SUM(day13) as total_day13'),
+            DB::raw('SUM(day14) as total_day14'),
+            DB::raw('SUM(day15) as total_day15'),
+            DB::raw('SUM(day16) as total_day16'),
+            DB::raw('SUM(day17) as total_day17'),
+            DB::raw('SUM(day18) as total_day18'),
+            DB::raw('SUM(day19) as total_day19'),
+            DB::raw('SUM(day20) as total_day20'),
+            DB::raw('SUM(day21) as total_day21'),
+            DB::raw('SUM(day22) as total_day22'),
+            DB::raw('SUM(day23) as total_day23'),
+            DB::raw('SUM(day24) as total_day24'),
+            DB::raw('SUM(day25) as total_day25'),
+            DB::raw('SUM(day26) as total_day26'),
+            DB::raw('SUM(day27) as total_day27'),
+            DB::raw('SUM(day28) as total_day28'),
+            DB::raw('SUM(day29) as total_day29'),
+            DB::raw('SUM(day30) as total_day30'),
+            DB::raw('SUM(day31) as total_day31'),
         )
         ->where('store_id', $store_id)
         ->where('as_of_month', $var_month)
         ->where('as_of_year', $year)
-        ->groupBy('item_number', 'supplier_number', 'store_id', 'type_product', 'sale_total', 'com')
+        ->groupBy('supplier_number', 'store_id', 'item_number', 'type_product', 'sale_total', 'com')
         ->get();
 
         // Query PC information in the store
@@ -720,10 +751,25 @@ class CommissionController extends Controller
                                 ->where('store_id', $store_id)
                                 ->where('as_of_month', $var_month)
                                 ->where('as_of_year', $year)
-                                ->get();                        
+                                ->get();    
+                                
+        $pcs_sale_qty = [];
+        foreach ($commissions as $commission) {
+            foreach ($pcs as $pc) {
+                for ($i = 1; $i <= 31; $i++) {
+                    $pcs_sale_qty[$commission->item_number][$pc->id][$i] = DB::table('tb_commission')
+                        ->where('store_id', $commission->store_id)
+                        ->where('item_number', $commission->item_number)
+                        ->where('id_pc', $pc->id)
+                        ->where('as_of_month', $var_month)
+                        ->where('as_of_year', $year)
+                        ->sum('day' . $i);
+                }
+            }
+        }
 
-        // ส่งข้อมูลไปยัง view
-        return view('commissions.edit_data_pc', compact('commissions', 'pcs', 'store_id', 'var_month','month', 'year', 'main_commission'));
+        return view('commissions.edit_data_pc', compact('commissions', 'pcs', 'pcs_sale_qty', 'store_id', 'var_month', 'month', 'year', 'main_commission'));
+        // return view('commissions.edit_data_pc', compact('commissions', 'pcs', 'store_id', 'var_month','month', 'year', 'main_commission'));
     }
 
 
@@ -883,9 +929,7 @@ class CommissionController extends Controller
     
     public function updateCommission(Request $request)
     {
-        // $ids = $request->input('id');
-        // $sale_qty = $request->input('sale_qty');
-        // $com = $request->input('com');
+
         $month = $request->input('month');
         $var_month = $request->input('var_month');
         $year = $request->input('year');
@@ -897,337 +941,412 @@ class CommissionController extends Controller
 
         try {
 
-                foreach ($pc_qty_data as $pro_model => $pcs) {
-                    foreach ($pcs as $id_pc => $qty) {
+                foreach ($pc_qty_data as $itemNumber => $pcs) {
+                    foreach ($pcs as $id_pc => $days) {
+                        // Prepare the update data array
+                        $update_data = [];
+                        foreach ($days as $day => $saleQty) {
+                            $dayField = 'day' . $day;
+                            $update_data[$dayField] = $saleQty; // Store day fields in associative array
+                        }
+        
+                        // Get product and price information
+                        $product = Product::where('item_number', $itemNumber)->first();
+                        $price = Price::where('item_number', $itemNumber)->first();
+        
+                        $sale_total_price_item = 0;
+                        $sale_qty = 0;
+        
+                        // Calculate sale_total_price_item and sale_qty
+                        foreach ($update_data as $dayField => $day_qty) {
+                            if ($day_qty != 0) {
+                                $price_column = 'price_' . $dayField;
+                                if (isset($price->$price_column) && $price->$price_column != 0) {
+                                    $sale_total_price_item += $day_qty * $price->$price_column;
+                                } else {
+                                    $sale_total_price_item += $day_qty * $product->price_vat;
+                                }
+                                $sale_qty += $day_qty;
+                            }
+                        }
+        
+                        // Check if existing data exists
                         $existingData = Commission::where('store_id', $store_id)
-                        ->where('pro_model', $pro_model)
-                        ->where('id_pc', $id_pc)
-                        ->where('as_of_month', $var_month)
-                        ->where('as_of_year', $year)
-                        ->first();
+                            ->where('itemNumber', $itemNumber)
+                            ->where('id_pc', $id_pc)
+                            ->where('as_of_month', $var_month)
+                            ->where('as_of_year', $year)
+                            ->first();
+
                         if ($existingData) {
+                            $update_fields = array_merge([
+                                'sale_total' => $sale_total_price_item,
+                                'sale_qty' => $sale_qty,
+                            ], $update_data);
+                        
                             Commission::updateOrCreate(
                                 [
                                     'store_id' => $store_id,
-                                    'pro_model' => $pro_model,
+                                    'itemNumber' => $itemNumber,
                                     'id_pc' => $id_pc,
                                     'as_of_month' => $var_month,
                                     'as_of_year' => $year,
                                 ],
-                                [
-                                    'sale_qty' => $qty,
-                                ]
+                                $update_fields
                             );
                         } else {
                 
                             $pc_with_data = Commission::where('store_id', $store_id)
-                            ->where('pro_model', $pro_model)
+                            ->where('itemNumber', $itemNumber)
                             ->where('as_of_month', $var_month)
                             ->where('as_of_year', $year)
                             ->first(); // คัดลอกจาก PC แรกที่มีข้อมูล
 
+                            $create_fields = array_merge([
+                                'supplier_number' => $pc_with_data->supplier_number,
+                                'store_id' => $pc_with_data->store_id,
+                                'type_store' => $pc_with_data->type_store,
+                                'as_of_month' => $var_month,
+                                'as_of_year' => $year,
+                                'itemNumber' => $pc_with_data->itemNumber,
+                                'type_product' => $pc_with_data->type_product,
+                                'sale_total' => $sale_total_price_item,
+                                'sale_qty' => $sale_qty,
+                                'id_pc' => $id_pc,
+                                'type_pc' => $pc_with_data->type_pc,
+                                'com' => $pc_with_data->com,
+                            ], $update_data);
+
                             if ($pc_with_data) {
-                                Commission::create([
-                                    'suppliercode' => $pc_with_data->suppliercode,
-                                    'store_id' => $pc_with_data->store_id,
-                                    'type_store' => $pc_with_data->type_store,
-                                    'as_of_month' => $var_month,
-                                    'as_of_year' => $year,
-                                    'pro_model' => $pc_with_data->pro_model,
-                                    'type_product' => $pc_with_data->type_product,
-                                    'sale_amt' => $pc_with_data->sale_amt,
-                                    'sale_amt_vat' => $pc_with_data->sale_amt_vat,
-                                    'sale_qty' => $qty, // อัปเดตจำนวนตามที่กรอกใหม่
-                                    'id_pc' => $id_pc,
-                                    'type_pc' => $pc_with_data->type_pc,
-                                    'com' => $pc_with_data->com,
-                                ]);
+                                Commission::create($create_fields);
                             }
                         }
     
-            $salesData = DB::table('tb_commission')
-                ->select(
-                    'store_id',
-                    'id_pc',
-                    // DB::raw('SUM(CASE WHEN type_product = "TV" THEN sale_amt_vat * sale_qty ELSE 0 END) as sale_tv'),
-                    DB::raw('SUM(CASE WHEN type_product = "TV" AND sale_qty > 0  THEN sale_amt_vat * sale_qty
-                                WHEN type_product = "TV" AND sale_qty < 0 THEN -1 * ABS(sale_amt_vat) * ABS(sale_qty)
-                                ELSE 0 END) as sale_tv'),
-                    DB::raw('SUM(CASE WHEN type_product = "TV" THEN sale_qty ELSE 0 END) as unit_tv'),
-                    // DB::raw('SUM(CASE WHEN type_product = "AV" THEN sale_amt_vat * sale_qty ELSE 0 END) as sale_av'),
-                    DB::raw('SUM(CASE WHEN type_product = "AV" AND sale_qty > 0  THEN sale_amt_vat * sale_qty
-                                WHEN type_product = "AV" AND sale_qty < 0 THEN -1 * ABS(sale_amt_vat) * ABS(sale_qty)
-                                ELSE 0 END) as sale_av'),
-                    DB::raw('SUM(CASE WHEN type_product = "AV" THEN sale_qty ELSE 0 END) as unit_av'),
-                    // DB::raw('SUM(CASE WHEN type_product = "HA" THEN sale_amt_vat * sale_qty ELSE 0 END) as sale_ha'),
-                    DB::raw('SUM(CASE WHEN type_product = "HA" AND sale_qty > 0  THEN sale_amt_vat * sale_qty
-                                WHEN type_product = "HA" AND sale_qty < 0 THEN -1 * ABS(sale_amt_vat) * ABS(sale_qty)
-                                ELSE 0 END) as sale_ha'),
-                    DB::raw('SUM(CASE WHEN type_product = "HA" THEN sale_qty ELSE 0 END) as unit_ha')
-                )
-                ->where('as_of_month', $var_month)
-                ->where('as_of_year', $year)
-                ->where('id_pc', $id_pc)
-                ->groupBy('store_id', 'id_pc')
-                ->get();
-            
-            $commissionData = DB::table('tb_commission')
-                ->select(
-                    'store_id',
-                    'id_pc',
-                    DB::raw('SUM(CASE WHEN type_product = "TV" THEN sale_qty * com ELSE 0 END) as normalcom_tv'),
-                    DB::raw('SUM(CASE WHEN type_product = "AV" THEN sale_qty * com ELSE 0 END) as normalcom_av'),
-                    DB::raw('SUM(CASE WHEN type_product = "HA" THEN sale_qty * com ELSE 0 END) as normalcom_ha')
-                )
-                ->where('as_of_month', $var_month)
-                ->where('as_of_year', $year)
-                ->where('id_pc', $id_pc)
-                ->groupBy('store_id', 'id_pc')
-                ->get();
-                
-                
-
-                $combinedData = $salesData->map(function ($sale) use ($commissionData) {
-                    $commission = $commissionData->first(function ($item) use ($sale) {
-                        return $item->store_id == $sale->store_id && $item->id_pc == $sale->id_pc;
-                    });
-                    // dd($commission, $sale);
-                    return (object) [
-                        'store_id' => $sale->store_id,
-                        'id_pc' => $sale->id_pc,
-                        'sale_tv' => $sale->sale_tv,
-                        'unit_tv' => $sale->unit_tv,
-                        'sale_av' => $sale->sale_av,
-                        'unit_av' => $sale->unit_av,
-                        'sale_ha' => $sale->sale_ha,
-                        'unit_ha' => $sale->unit_ha,
-                        'normalcom_tv' => $commission ? $commission->normalcom_tv : 0,
-                        'normalcom_av' => $commission ? $commission->normalcom_av : 0,
-                        'normalcom_ha' => $commission ? $commission->normalcom_ha : 0,
-                        'extra_tv' => 0,
-                        'extra_ha' => 0,
-                    ];
-                });
-                foreach ($combinedData as $data) {
-
-                    $pcs = tb_pc::whereNull('status_pc')
-                        ->where('id', $data->id_pc)
-                        ->get();
-                    $pc = $pcs->first();
-    
-                    $data->achieve = (($data->sale_tv + $data->sale_av) * 100) / $pc->tarket;
-                
-                    switch ($pc->type_pc) {
-                        case 'PC':
-                            if ($data->achieve >= 101) {
-                                $achieve_percent = min($data->achieve, 120);
-                                $data->com_tv = $data->normalcom_tv * ($achieve_percent / 100);
-                                $data->com_av = $data->normalcom_av * ($achieve_percent / 100);
-                                $data->com_ha = $data->normalcom_ha;
-                            } elseif ($data->achieve >= 70) {
-                                $data->com_tv = $data->normalcom_tv;
-                                $data->com_av = $data->normalcom_av;
-                                $data->com_ha = $data->normalcom_ha;
-                            } elseif ($data->achieve >= 30) {
-                                $data->com_tv = $data->normalcom_tv * ($data->achieve / 100);
-                                $data->com_av = $data->normalcom_av * ($data->achieve / 100);
-                                $data->com_ha = $data->normalcom_ha;
-                            } else {
-                                $data->com_tv = 0;
-                                $data->com_av = 0;
-                                // $data->com_ha = 0;
-                                $data->com_ha = $data->normalcom_ha;
-                            }
+                    $salesData = DB::table('tb_commission')
+                        ->select(
+                            'store_id',
+                            'id_pc',
+        
+                            DB::raw('SUM(CASE WHEN type_product = "TV" THEN sale_total ELSE 0 END) as sale_tv'),
+                            DB::raw('SUM(CASE WHEN type_product = "TV" THEN sale_qty ELSE 0 END) as unit_tv'),
                             
-                            switch ($pc->type_store) {
-                                case 'A':
-                                    if ($data->achieve >= 150) {
-                                        $data->extra_tv = 9000;
-                                    } elseif ($data->achieve >= 130) {
-                                        $data->extra_tv = 8000;
-                                    } elseif ($data->achieve >= 120) {
-                                        $data->extra_tv = 7000;
-                                    } elseif ($data->achieve >= 100) {
-                                        $data->extra_tv = 6000;
+                            DB::raw('SUM(CASE WHEN type_product = "AV" THEN sale_total ELSE 0 END) as sale_av'),
+                            DB::raw('SUM(CASE WHEN type_product = "AV" THEN sale_qty ELSE 0 END) as unit_av'),
+        
+                            DB::raw('SUM(CASE WHEN type_product = "HA" THEN sale_total ELSE 0 END) as sale_ha'),
+                            DB::raw('SUM(CASE WHEN type_product = "HA" THEN sale_qty ELSE 0 END) as unit_ha')
+                        )
+                        ->where('as_of_month', $var_month)
+                        ->where('as_of_year', $year)
+                        ->groupBy('store_id', 'id_pc')
+                        ->get();
+                    
+                    $commissionData = DB::table('tb_commission')
+                        ->select(
+                            'store_id',
+                            'id_pc',
+                            DB::raw('SUM(CASE WHEN type_product = "TV" THEN sale_qty * com ELSE 0 END) as normalcom_tv'),
+                            DB::raw('SUM(CASE WHEN type_product = "AV" THEN sale_qty * com ELSE 0 END) as normalcom_av'),
+                            DB::raw('SUM(CASE WHEN type_product = "HA" THEN sale_qty * com ELSE 0 END) as normalcom_ha')
+                        )
+                        ->where('as_of_month', $var_month)
+                        ->where('as_of_year', $year)
+                        ->groupBy('store_id', 'id_pc')
+                        ->get();
+                
+                
+
+                        $combinedData = $salesData->map(function ($sale) use ($commissionData) {
+                            $commission = $commissionData->first(function ($item) use ($sale) {
+                                return $item->store_id == $sale->store_id && $item->id_pc == $sale->id_pc;
+                            });
+                        
+                            return (object) [
+                                'store_id' => $sale->store_id,
+                                'id_pc' => $sale->id_pc,
+                                'sale_tv' => $sale->sale_tv,
+                                'unit_tv' => $sale->unit_tv,
+                                'sale_av' => $sale->sale_av,
+                                'unit_av' => $sale->unit_av,
+                                'sale_ha' => $sale->sale_ha,
+                                'unit_ha' => $sale->unit_ha,
+                                'normalcom_tv' => $commission ? $commission->normalcom_tv : 0,
+                                'normalcom_av' => $commission ? $commission->normalcom_av : 0,
+                                'normalcom_ha' => $commission ? $commission->normalcom_ha : 0,
+                                'extra_tv' => 0,
+                                'extra_ha' => 0,
+                            ];
+                        });
+                        
+                        foreach ($combinedData as $data) {
+            
+                            $pcs = tb_pc::whereNull('status_pc')
+                                ->where('id', $data->id_pc)
+                                ->get();
+                            $pc = $pcs->first();
+            
+                            $data->achieve = $pc->tarket != 0 ? (($data->sale_tv + $data->sale_av) * 100) / $pc->tarket: 0;
+                        
+                            switch ($pc->type_pc) {
+                                case 'PC':
+                                    if ($data->achieve >= 101) {
+                                        $achieve_percent = min($data->achieve, 120);
+                                        $data->com_tv = $data->normalcom_tv * ($achieve_percent / 100);
+                                        $data->com_av = $data->normalcom_av * ($achieve_percent / 100);
+                                        $data->com_ha = $data->normalcom_ha;
+                                    } elseif ($data->achieve >= 70) {
+                                        $data->com_tv = $data->normalcom_tv;
+                                        $data->com_av = $data->normalcom_av;
+                                        $data->com_ha = $data->normalcom_ha;
+                                    } elseif ($data->achieve >= 30) {
+                                        $data->com_tv = $data->normalcom_tv * ($data->achieve / 100);
+                                        $data->com_av = $data->normalcom_av * ($data->achieve / 100);
+                                        $data->com_ha = $data->normalcom_ha;
                                     } else {
-                                        $data->extra_tv = 0;
+                                        $data->com_tv = 0;
+                                        $data->com_av = 0;
+                                        // $data->com_ha = 0;
+                                        $data->com_ha = $data->normalcom_ha;
+                                    }
+                                    
+                                    switch ($pc->type_store) {
+                                        case 'A':
+                                            if ($data->achieve >= 150) {
+                                                $data->extra_tv = 9000;
+                                            } elseif ($data->achieve >= 130) {
+                                                $data->extra_tv = 8000;
+                                            } elseif ($data->achieve >= 120) {
+                                                $data->extra_tv = 7000;
+                                            } elseif ($data->achieve >= 100) {
+                                                $data->extra_tv = 6000;
+                                            } else {
+                                                $data->extra_tv = 0;
+                                            }
+                                            break;
+                                        case 'B':
+                                            if ($data->achieve >= 150) {
+                                                $data->extra_tv = 6000;
+                                            } elseif ($data->achieve >= 130) {
+                                                $data->extra_tv = 5000;
+                                            } elseif ($data->achieve >= 120) {
+                                                $data->extra_tv = 4000;
+                                            } elseif ($data->achieve >= 100) {
+                                                $data->extra_tv = 3000;
+                                            } else {
+                                                $data->extra_tv = 0;
+                                            }
+                                            break;
+                                        case 'C':
+                                            if ($data->achieve >= 120) {
+                                                $data->extra_tv = 3000;
+                                            } elseif ($data->achieve >= 100) {
+                                                $data->extra_tv = 2000;
+                                            } else {
+                                                $data->extra_tv = 0;
+                                            }
+                                            break;
+                                        default:
+                                            $data->extra_tv = 0;
+                                            break;
+                                    }
+                                    
+                                    if ($data->sale_ha > 300000) {
+                                        $data->extra_ha = 4000;
+                                    } elseif ($data->sale_ha > 200000) {
+                                        $data->extra_ha = 3000;
+                                    } elseif ($data->sale_ha > 100000) {
+                                        $data->extra_ha = 2000;
+                                    } elseif ($data->sale_ha >= 70000) {
+                                        $data->extra_ha = 1000;
+                                    } else {
+                                        $data->extra_ha = 0;
+                                    }
+            
+                                    //Extra PC
+                                    $sale_out = $data->sale_tv + $data->sale_av + $data->sale_ha;
+                                    if ($sale_out >= 500000) {
+                                        $data->extra_tv += 2000;
+                                    } elseif ($sale_out >= 600000) {
+                                        $data->extra_tv += 3000;
+                                    } else {
+                                        $data->extra_tv += 0;
+                                    }
+            
+                                    //Extra store 350000
+                                    if ($sale_out >= 350000) {
+            
+                                        $extra_pc_store = tb_pc::whereNull('status_pc')
+                                            ->where('store_id', $data->store_id)
+                                            ->where('type_pc', 'PC')
+                                            ->get();
+                                            
+                                        if ($extra_pc_store->count() == 1) {
+                                            if ($sale_out >= 1000000) {
+                                                $data->extra_tv += 5000;
+                                            }else if ($sale_out >= 800000) {
+                                                $data->extra_tv += 3000;
+                                            }
+                                        }else if ($extra_pc_store->count() > 1) {
+            
+                                            $pc_sales = DB::table('tb_commission')
+                                            ->select('id_pc', DB::raw('SUM(sale_total) as sale_total'))
+                                            ->where('as_of_month', $var_month)
+                                            ->where('as_of_year', $year)
+                                            ->where('type_pc', 'PC')
+                                            ->where('store_id', $data->store_id)
+                                            ->groupBy('id_pc')
+                                            ->havingRaw('SUM(sale_total) >= 350000')
+                                            ->get();
+            
+                                            if($extra_pc_store->count() == $pc_sales->count()){
+                                                
+                                                $extra_pc_sale_total = DB::table('tb_commission')
+                                                ->select(DB::raw('SUM(sale_total) as total_sales'))
+                                                ->where('as_of_month', $var_month)
+                                                ->where('as_of_year', $year)
+                                                ->where('type_pc', 'PC')
+                                                ->where('store_id', $data->store_id)
+                                                ->first();
+            
+                                                if ($extra_pc_sale_total->total_sales >= 1000000) {
+                                                    $data->extra_tv += 5000 / $extra_pc_store->count();
+                                                }else if ($extra_pc_sale_total->total_sales >= 800000) {
+                                                    $data->extra_tv += 3000 / $extra_pc_store->count();
+                                                }
+                                            }
+                                        }else{
+            
+                                        }
                                     }
                                     break;
-                                case 'B':
-                                    if ($data->achieve >= 150) {
+                                case 'PC_HA':
+                                    $data->com_tv = $data->normalcom_tv;
+                                    $data->com_av = $data->normalcom_av;
+                                    $data->com_ha = $data->normalcom_ha;
+            
+                                    if ($data->sale_ha > 300000) {
+                                        $data->extra_ha = 4000;
+                                    } elseif ($data->sale_ha > 250000) {
+                                        $data->extra_ha = 3500;
+                                    } elseif ($data->sale_ha > 200000) {
+                                        $data->extra_ha = 2500;
+                                    } elseif ($data->sale_ha > 150000) {
+                                        $data->extra_ha = 1000;
+                                    }else {
+                                        $data->extra_ha = 0;
+                                    }
+            
+                                    break;
+                                case 'Freelance':
+                                    $data->com_tv = $data->sale_tv * 0.05;
+                                    $data->com_av = $data->sale_av * 0.05;
+                                    $data->com_ha = $data->sale_ha * 0.05;
+                                    $sale_out = $data->sale_tv + $data->sale_av + $data->sale_ha;
+                                    if ($sale_out > 299999) {
                                         $data->extra_tv = 6000;
-                                    } elseif ($data->achieve >= 130) {
+                                    } elseif ($sale_out > 199999) {
                                         $data->extra_tv = 5000;
-                                    } elseif ($data->achieve >= 120) {
+                                    } elseif ($sale_out > 149999) {
                                         $data->extra_tv = 4000;
-                                    } elseif ($data->achieve >= 100) {
-                                        $data->extra_tv = 3000;
+                                    } elseif ($sale_out > 99999) {
+                                        $data->extra_tv = 2000;
                                     } else {
                                         $data->extra_tv = 0;
                                     }
                                     break;
-                                case 'C':
-                                    if ($data->achieve >= 120) {
+                                case 'Freelance_plus':
+                                    // $data->com_tv = $data->sale_tv * 0.05;
+                                    // $data->com_av = $data->sale_av * 0.05;
+                                    // $data->com_ha = $data->sale_ha * 0.05;
+                                    $data->com_tv = $data->normalcom_tv;
+                                    $data->com_av = $data->normalcom_av;
+                                    $data->com_ha = $data->normalcom_ha;
+            
+                                    $sale_out = $data->sale_tv + $data->sale_av + $data->sale_ha;
+                                    if ($sale_out > 250000) {
+                                        $data->extra_tv = 11000;
+                                    } elseif ($sale_out > 200000) {
+                                        $data->extra_tv = 9000;
+                                    } elseif ($sale_out > 150000) {
+                                        $data->extra_tv = 7000;
+                                    } elseif ($sale_out > 100000) {
+                                        $data->extra_tv = 4000;
+                                    } elseif ($sale_out >= 70000) {
                                         $data->extra_tv = 2000;
-                                    } elseif ($data->achieve >= 100) {
-                                        $data->extra_tv = 1000;
                                     } else {
                                         $data->extra_tv = 0;
                                     }
+                                    break;
+                                case 'pc_promotion':
+                                    $data->com_tv = $data->normalcom_tv;
+                                    $data->com_av = $data->normalcom_av;
+                                    $data->com_ha = $data->normalcom_ha;
                                     break;
                                 default:
+                                    $data->com_tv = 0;
+                                    $data->com_av = 0;
+                                    $data->com_ha = 0;
                                     $data->extra_tv = 0;
+                                    $data->extra_ha = 0;
                                     break;
                             }
+                        
                             
-                            if ($data->sale_ha > 300000) {
-                                $data->extra_ha = 4000;
-                            } elseif ($data->sale_ha > 200000) {
-                                $data->extra_ha = 3000;
-                            } elseif ($data->sale_ha > 100000) {
-                                $data->extra_ha = 2000;
-                            } elseif ($data->sale_ha >= 70000) {
-                                $data->extra_ha = 1000;
+                        
+                            
+                        
+                            //คำนวณ net_com และ net_pay
+                            $data->pay_com = $data->com_tv + $data->com_av + $data->com_ha;
+                            $data->net_com = $data->pay_com + $data->extra_tv + $data->extra_ha;
+                            $data->net_pay = $data->net_com ;
+                            $sale_total = $data->sale_tv+$data->sale_av+$data->sale_ha;
+                        
+                            //คำนวณ dis_pay
+                            // $data->dis_pay = $data->pay_com / $data->net_com;
+                            if ($data->net_com != 0) {
+                                $data->dis_pay = $data->net_com / $sale_total;
                             } else {
-                                $data->extra_ha = 0;
+                                // กำหนดค่า $data->dis_pay เป็นค่าอื่นที่คุณต้องการในกรณีที่ net_com เป็น 0
+                                $data->dis_pay = 0; // หรืออาจจะเป็นค่าที่เหมาะสมกับ logic ของคุณ
                             }
-                            break;
-                        case 'PC_HA':
-                            $data->com_tv = $data->normalcom_tv;
-                            $data->com_av = $data->normalcom_av;
-                            $data->com_ha = $data->normalcom_ha;
-    
-                            if ($data->sale_ha > 350000) {
-                                $data->extra_ha = 5500;
-                            } elseif ($data->sale_ha > 320000) {
-                                $data->extra_ha = 5000;
-                            } elseif ($data->sale_ha > 300000) {
-                                $data->extra_ha = 4500;
-                            } elseif ($data->sale_ha > 280000) {
-                                $data->extra_ha = 4000;
-                            }elseif ($data->sale_ha > 250000) {
-                                $data->extra_ha = 3500;
-                            }elseif ($data->sale_ha > 230000) {
-                                $data->extra_ha = 3000;
-                            }elseif ($data->sale_ha > 200000) {
-                                $data->extra_ha = 2500;
-                            }elseif ($data->sale_ha > 180000) {
-                                $data->extra_ha = 2000;
-                            }elseif ($data->sale_ha >= 150000) {
-                                $data->extra_ha = 1000;
-                            } else {
-                                $data->extra_ha = 0;
-                            }
-    
-                            break;
-                        case 'Freelance':
-                            $data->com_tv = $data->sale_tv * 0.05;
-                            $data->com_av = $data->sale_av * 0.05;
-                            $data->com_ha = $data->sale_ha * 0.05;
-                            $sale_out = $data->sale_tv + $data->sale_av + $data->sale_ha;
-                            if ($sale_out > 299999) {
-                                $data->extra_tv = 6000;
-                            } elseif ($sale_out > 199999) {
-                                $data->extra_tv = 5000;
-                            } elseif ($sale_out > 149999) {
-                                $data->extra_tv = 4000;
-                            } elseif ($sale_out > 99999) {
-                                $data->extra_tv = 2000;
-                            } else {
-                                $data->extra_tv = 0;
-                            }
-                            break;
-                        case 'Freelance_plus':
-                            $data->com_tv = $data->sale_tv * 0.05;
-                            $data->com_av = $data->sale_av * 0.05;
-                            $data->com_ha = $data->sale_ha * 0.05;
-                            $sale_out = $data->sale_tv + $data->sale_av + $data->sale_ha;
-                            if ($sale_out > 250000) {
-                                $data->extra_tv = 11000;
-                            } elseif ($sale_out > 200000) {
-                                $data->extra_tv = 9000;
-                            } elseif ($sale_out > 150000) {
-                                $data->extra_tv = 7000;
-                            } elseif ($sale_out > 100000) {
-                                $data->extra_tv = 4000;
-                            } elseif ($sale_out >= 70000) {
-                                $data->extra_tv = 2000;
-                            } else {
-                                $data->extra_tv = 0;
-                            }
-                            break;
-                        default:
-                            $data->com_tv = 0;
-                            $data->com_av = 0;
-                            $data->com_ha = 0;
-                            $data->extra_tv = 0;
-                            $data->extra_ha = 0;
-                            break;
+                            
+                            DB::table('tb_main_commission')->updateOrInsert(
+                                [
+                                    'store_id' => $data->store_id,
+                                    'as_of_month' => $var_month,
+                                    'as_of_year' => $year,
+                                    'id_pc' => $pc->id,
+                                ],
+                                [
+                                'type_store' => $pc->type_store,
+                                'name_pc' => $pc->name_pc,
+                                'sale_tv' => $data->sale_tv,
+                                'unit_tv' => $data->unit_tv,
+                                'sale_av' => $data->sale_av,
+                                'unit_av' => $data->unit_av,
+                                'sale_ha' => $data->sale_ha,
+                                'unit_ha' => $data->unit_ha,
+                                'sale_total' => $sale_total,
+                                'type_pc' => $pc->type_pc,
+                                'pc_salary' => $pc->salary,
+                                'tarket' => $pc->tarket,
+                                'achieve' => $data->achieve,
+                                'normalcom_tv' => $data->normalcom_tv,
+                                'normalcom_av' => $data->normalcom_av,
+                                'normalcom_ha' => $data->normalcom_ha,
+                                'com_tv' => $data->com_tv,
+                                'com_av' => $data->com_av,
+                                'com_ha' => $data->com_ha,
+                                'extra_tv' => $data->extra_tv,
+                                'extra_ha' => $data->extra_ha,
+                                'pay_com' => $data->pay_com,
+                                'net_com' => $data->net_com,
+                                'net_pay' => $data->net_pay,
+                                'dis_pay' => $data->dis_pay
+                            ]);
+                        }
                     }
-                
-                    
-                    $advance_pay = $advance_data[$id_pc] ?? 0;
-                    $remark_pay = $remark_data[$id_pc] ?? NULL;
-                    $other_pay = $other_data[$id_pc] ?? 0;
-                
-                    //คำนวณ net_com และ net_pay
-                    $data->pay_com = $data->com_tv + $data->com_av + $data->com_ha;
-                    $data->net_com = $data->pay_com + $data->extra_tv + $data->extra_ha;
-
-                    $data->net_pay = $data->net_com - $advance_pay;
-                    $data->net_pay = $data->net_pay + $other_pay;
-                    $sale_total = $data->sale_tv+$data->sale_av+$data->sale_ha;
-                
-                    //คำนวณ dis_pay
-                    // $data->dis_pay = $data->pay_com / $data->net_com;
-                    if ($data->net_com != 0) {
-                        $data->dis_pay = $data->net_com / $sale_total;
-                    } else {
-                        // กำหนดค่า $data->dis_pay เป็นค่าอื่นที่คุณต้องการในกรณีที่ net_com เป็น 0
-                        $data->dis_pay = 0; // หรืออาจจะเป็นค่าที่เหมาะสมกับ logic ของคุณ
-                    }
-                    
-                    DB::table('tb_main_commission')->updateOrInsert(
-                        [
-                            'store_id' => $data->store_id,
-                            'as_of_month' => $var_month,
-                            'as_of_year' => $year,
-                            'id_pc' => $pc->id,
-                        ],
-                        [
-                        'type_store' => $pc->type_store,
-                        'name_pc' => $pc->name_pc,
-                        'sale_tv' => $data->sale_tv,
-                        'unit_tv' => $data->unit_tv,
-                        'sale_av' => $data->sale_av,
-                        'unit_av' => $data->unit_av,
-                        'sale_ha' => $data->sale_ha,
-                        'unit_ha' => $data->unit_ha,
-                        'sale_total' => $sale_total,
-                        'type_pc' => $pc->type_pc,
-                        'pc_salary' => $pc->salary,
-                        'tarket' => $pc->tarket,
-                        'achieve' => $data->achieve,
-                        'normalcom_tv' => $data->normalcom_tv,
-                        'normalcom_av' => $data->normalcom_av,
-                        'normalcom_ha' => $data->normalcom_ha,
-                        'com_tv' => $data->com_tv,
-                        'com_av' => $data->com_av,
-                        'com_ha' => $data->com_ha,
-                        'extra_tv' => $data->extra_tv,
-                        'extra_ha' => $data->extra_ha,
-                        'pay_com' => $data->pay_com,
-                        'net_com' => $data->net_com,
-                        'advance_pay' => $advance_pay,
-                        'other' => $other_pay ,
-                        'remark' => $remark_pay ,
-                        'net_pay' => $data->net_pay,
-                        'dis_pay' => $data->dis_pay
-                    ]);
                 }
-            }
-            
-            }
         return redirect()->route('commissions.show', ['year' => $year, 'month' => $month , 'var_month' => $var_month])
         ->with('success', 'Data Update successfully');
         } catch (\Exception $e) {
