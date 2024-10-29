@@ -76,10 +76,11 @@ $permissions = json_decode(Auth::user()->permissions, true); // แปลง JSO
                     <th>Supplier number</th>
                     <th>Store ID</th>
                     <th>Item number</th>
+                    <th>Item description</th>
                     <th>Type Product</th>
-                    <th>Sale total (VAT)</th>
+                    {{-- <th>Sale total (VAT)</th> --}}
                     <th>Price Com</th>
-                    <th>Total Sale Quantity</th>
+                    <th>Total QTY</th>
                 </tr>
             </thead>
             <tbody>
@@ -88,8 +89,15 @@ $permissions = json_decode(Auth::user()->permissions, true); // แปลง JSO
                         <td>{{ $commission->supplier_number }}</td>
                         <td>{{ $commission->store_id }}</td>
                         <td>{{ $commission->item_number }}</td>
+                        @php
+                        $product_des = DB::table('tb_product')
+                                        ->where('item_number', $commission->item_number)
+                                        ->whereNull('status_product') 
+                                        ->first()->item_des ?? ''; 
+                        @endphp
+                        <td>{{ $product_des }}</td>
                         <td>{{ $commission->type_product }}</td>
-                        <td>{{ number_format($commission->sale_total, 0) }}</td>
+                        {{-- <td>{{ number_format($commission->sale_total, 0) }}</td> --}}
                         <td>{{ number_format($commission->com, 0) }}</td>
                         <td>{{ number_format($commission->total_sale_qty, 0) }}</td>
                     </tr>
@@ -98,21 +106,21 @@ $permissions = json_decode(Auth::user()->permissions, true); // แปลง JSO
                         <td colspan="7">
                             <table class="table table-sm table-bordered">
                                 <thead>
-                                    <tr>
-                                        <th>Total Day</th>
+                                    <tr align="center">
+                                        <th width="8%" align="center">Day</th>
                                         @for ($i = 1; $i <= 31; $i++)
-                                            <th>D{{ $i }}</th>
+                                            <th align="center">D{{ $i }}</th>
                                         @endfor
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <tr>
-                                        <td>Sale QTY</td>
+                                        <td align="center">QTY</td>
                                         @for ($i = 1; $i <= 31; $i++)
                                             @php
                                                 $dayField = 'total_day' . $i;
                                             @endphp
-                                            <td>{{ number_format($commission->$dayField, 0) }}</td>
+                                        <td align="center">{{ number_format($commission->$dayField, 0) }}</td>
                                         @endfor
                                     </tr>
                                     
@@ -121,7 +129,7 @@ $permissions = json_decode(Auth::user()->permissions, true); // แปลง JSO
                                             <td>{{ $pc->name_pc }}</td>
                                             @for ($i = 1; $i <= 31; $i++)
                                                 <td>
-                                                    <input type="number" 
+                                                    <input type="text" 
                                                            name="pc_qty[{{ $commission->item_number }}][{{ $pc->id }}][day{{ $i }}]" 
                                                            value="{{ number_format($pcs_sale_qty[$commission->item_number][$pc->id][$i], 0) }}" 
                                                            class="sale-qty-input form-control"
@@ -154,66 +162,60 @@ $permissions = json_decode(Auth::user()->permissions, true); // แปลง JSO
         document.addEventListener('DOMContentLoaded', function () {
             const saleQtyInputs = document.querySelectorAll('.sale-qty-input');
             const submitBtn = document.getElementById('submit-btn');
-    
+
             function validateQuantities() {
                 let isValid = true;
-    
+
                 // Loop through each commission row
                 document.querySelectorAll('tbody > tr').forEach(row => {
                     const totalDays = [];
                     
                     // Get item_number from the commission row
-                    const itemNumber = row.cells[2].textContent; // คอลัมน์ Item Number
-    
+                    const itemNumber = row.cells[2].textContent;
+
                     // Collect total day values for this item_number
-                    const totalDayFields = row.querySelectorAll('td:nth-child(n+5)'); // คอลัมน์จาก Sale Total (VAT) ขึ้นไป
+                    const totalDayFields = row.querySelectorAll('td:nth-child(n+5)');
                     totalDayFields.forEach((totalDayField, index) => {
                         totalDays[index] = parseFloat(totalDayField.textContent.replace(',', '')) || 0;
                     });
-    
-                    // Find the corresponding PC rows
+
+                    // Sum quantities for each day across all PCs
+                    const daySums = Array(31).fill(0); // Array to store sum per day for each item
+                    
                     const pcsRows = row.nextElementSibling.querySelectorAll('tbody tr');
                     pcsRows.forEach(pcRow => {
-                        let sumQty = 0;
-    
-                        // Loop over each input for the current item_number and PC
                         pcRow.querySelectorAll('.sale-qty-input').forEach((input, index) => {
                             const value = parseFloat(input.value.replace(',', '')) || 0;
-                            sumQty += value;
-    
-                            // Compare the input value to the totalDay for the current item_number
-                            if (value !== totalDays[index]) {
-                                input.style.backgroundColor = 'red'; // เปลี่ยนสีพื้นหลังเป็นสีแดง
-                                isValid = false;
-                            } else {
-                                input.style.backgroundColor = ''; // คืนค่าพื้นหลังเป็นปกติ
-                            }
+                            daySums[index] += value; // Sum quantities per day
                         });
-    
-                        // Optional: Check if the sum of quantities equals the total for the current item_number
-                        const totalQtyField = row.cells[6]; // คอลัมน์ Total Sale Quantity
-                        const totalQty = parseFloat(totalQtyField.textContent.replace(',', '')) || 0;
-                        if (sumQty !== totalQty) {
-                            pcRow.style.backgroundColor = 'red'; // เปลี่ยนสีพื้นหลังของแถว PC ถ้าจำนวนรวมไม่ตรง
+                    });
+
+                    // Validate if daySums match totalDays
+                    daySums.forEach((daySum, index) => {
+                        const inputsForDay = row.nextElementSibling.querySelectorAll(`.sale-qty-input[data-day="${index + 1}"]`);
+                        
+                        if (daySum !== totalDays[index]) {
+                            // Highlight inputs for this day if not matching
+                            inputsForDay.forEach(input => input.style.backgroundColor = 'red');
                             isValid = false;
                         } else {
-                            pcRow.style.backgroundColor = ''; // คืนค่าพื้นหลังเป็นปกติ
+                            inputsForDay.forEach(input => input.style.backgroundColor = '');
                         }
                     });
                 });
-    
-                submitBtn.disabled = !isValid; // ปิดปุ่มส่งข้อมูลถ้าทุกค่าไม่ถูกต้อง
+
+                submitBtn.disabled = !isValid;
             }
-    
-            // Attach input event to each sale quantity input
+
             saleQtyInputs.forEach(input => {
                 input.addEventListener('input', validateQuantities);
             });
-    
-            // Initial validation
-            validateQuantities();
+
+            validateQuantities(); // Initial validation
         });
+
     </script> --}}
+    
     
     
 @endsection
