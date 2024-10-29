@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Product Manage</title>
-    <link rel="icon" href="{{ asset('bigc.jpg') }}" type="image/x-icon">
+    <link rel="icon" href="{{ asset('icon.jpg') }}" type="image/x-icon">
     <link rel="stylesheet" href="{{ asset('css/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ asset('css/cssfont.css') }}">
     <link rel="stylesheet" href="{{ asset('css/chosen.min.css') }}">
@@ -161,6 +161,7 @@
                                         <option value="TV">TV</option>
                                         <option value="AV">AV</option>
                                         <option value="HA">HA</option>
+                                        <option value="AIR">AIR</option>
                                     </select>
                                 </div>
                                 <div class="col-md-6 mb-3">
@@ -231,6 +232,7 @@
                                         <option value="TV">TV</option>
                                         <option value="AV">AV</option>
                                         <option value="HA">HA</option>
+                                        <option value="AIR">AIR</option>
                                     </select>
                                 </div>
                                 <div class="col-md-6 mb-3">
