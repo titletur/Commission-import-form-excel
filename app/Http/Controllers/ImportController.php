@@ -317,35 +317,54 @@ class ImportController extends Controller
                     );
                 } else if ($pcs->count() > 1) {
                     $sale_qty_per_pc = (int)(abs($row['net_sale_qty_mtd']) / $pcs->count());
-                    $remaining_qty = abs($row['net_sale_qty_mtd']) - (abs($sale_qty_per_pc) * $pcs->count());
-                    
-
-                    foreach ($pcs as $pc) {
-                        
+                    $remaining_qty = abs($row['net_sale_qty_mtd']) - ($sale_qty_per_pc * $pcs->count());
+                
+                    foreach ($pcs as $pcIndex => $pc) {
                         $product = product::where('item_number', $row['item_number'])->first();
                         $price = Price::where('item_number', $row['item_number'])->first();
-
+                
                         $day_totals = [];
                         $remaining_days_qty = [];
                         for ($day = 1; $day <= 31; $day++) {
                             $day_key = 'day' . $day;
                             $day_totals[$day] = (int)(abs($row[$day_key]) / $pcs->count());
-                            $remaining_days_qty[$day] = abs($row[$day_key]) - (abs($day_totals[$day]) * $pcs->count());
+                            $remaining_days_qty[$day] = (int)abs($row[$day_key]) - ($day_totals[$day] * $pcs->count());
                         }
-
+                        
+                        
                         $sale_total_price_item = 0;
                         for ($num_qty_price = 1; $num_qty_price <= 31; $num_qty_price++) {
-                            $day_qty = $day_totals[$num_qty_price]; 
+                            $day_qty = $day_totals[$num_qty_price] + ($remaining_days_qty[$num_qty_price] > 0 && $pcIndex < $remaining_days_qty[$num_qty_price] ? 1 : 0);
+                
                             if ($day_qty != 0) {
                                 $price_column = 'price_day' . $num_qty_price; 
-                                if (isset($price->$price_column) && $price->$price_column != 0) {
-                                    $sale_total_price_item += $day_qty * $price->$price_column; 
-                                } else {
-                                    $sale_total_price_item += $day_qty * $product->price_vat; 
-                                }
+                                $sale_total_price_item += $day_qty * ($price->$price_column ?? $product->price_vat);
                             }
                         }
 
+
+                        // Commission::updateOrInsert(
+                        //     [
+                        //         'supplier_number' => $row['supplier_number'],
+                        //         'store_id' => $row['location_number'],
+                        //         'as_of_month' => $row['as_of_month'],
+                        //         'as_of_year' => $row['as_of_year'],
+                        //         'item_number' => $row['item_number'],
+                        //         'id_pc' => $pc->id,
+                        //     ],
+                        //     [
+                        //         'type_store' => $pc->type_store,
+                        //         'type_product' => $product->type_product,
+                        //         'sale_total' => $sale_total_price_item,
+                        //         'sale_qty' => abs(($row['net_sale_qty_mtd'] < 0 ? -1 : 1) * ($sale_qty_per_pc + ($remaining_qty > 0 && $pcIndex < $remaining_qty ? 1 : 0))),
+                        //         'com' => $product->com,
+                        //         'type_pc' => $pc->type_pc,
+                        //     ] + array_reduce(range(1, 31), function ($carry, $day) use ($day_totals, $remaining_days_qty, $pcIndex) {
+                        //         $day_key = 'day' . $day;
+                        //         $carry[$day_key] = abs(($day_totals[$day]< 0 ? -1 : 1) * ($day_totals[$day] + ($remaining_days_qty[$day] > 0 && $pcIndex < $remaining_days_qty[$day] ? 1 : 0)));
+                        //         return $carry;
+                        //     }, [])
+                        // );
                         Commission::updateOrInsert(
                             [
                                 'supplier_number' => $row['supplier_number'],
@@ -359,46 +378,43 @@ class ImportController extends Controller
                                 'type_store' => $pc->type_store,
                                 'type_product' => $product->type_product,
                                 'sale_total' => $sale_total_price_item,
-                                'sale_qty' => ($row['net_sale_qty_mtd'] < 0 ? -1 : 1) * ($sale_qty_per_pc + ($remaining_qty > 0 ? 1 : 0)),
+                                'sale_qty' => abs(($row['net_sale_qty_mtd'] < 0 ? -1 : 1) * ($sale_qty_per_pc + ($remaining_qty > 0 && $pcIndex < $remaining_qty ? 1 : 0))),
                                 'com' => $product->com,
                                 'type_pc' => $pc->type_pc,
-                                'day1' => ($row['day1'] < 0 ? -1 : 1) * ($day_totals[1] + ($remaining_days_qty[1] > 0 ? 1 : 0)),
-                                'day2' => ($row['day2'] < 0 ? -1 : 1) * ($day_totals[2] + ($remaining_days_qty[2] > 0 ? 1 : 0)),
-                                'day3' => ($row['day3'] < 0 ? -1 : 1) * ($day_totals[3] + ($remaining_days_qty[3] > 0 ? 1 : 0)),
-                                'day4' => ($row['day4'] < 0 ? -1 : 1) * ($day_totals[4] + ($remaining_days_qty[4] > 0 ? 1 : 0)),
-                                'day5' => ($row['day5'] < 0 ? -1 : 1) * ($day_totals[5] + ($remaining_days_qty[5] > 0 ? 1 : 0)),
-                                'day6' => ($row['day6'] < 0 ? -1 : 1) * ($day_totals[6] + ($remaining_days_qty[6] > 0 ? 1 : 0)),
-                                'day7' => ($row['day7'] < 0 ? -1 : 1) * ($day_totals[7] + ($remaining_days_qty[7] > 0 ? 1 : 0)),
-                                'day8' => ($row['day8'] < 0 ? -1 : 1) * ($day_totals[8] + ($remaining_days_qty[8] > 0 ? 1 : 0)),
-                                'day9' => ($row['day9'] < 0 ? -1 : 1) * ($day_totals[9] + ($remaining_days_qty[9] > 0 ? 1 : 0)),
-                                'day10' => ($row['day10'] < 0 ? -1 : 1) * ($day_totals[10] + ($remaining_days_qty[10] > 0 ? 1 : 0)),
-                                'day11' => ($row['day11'] < 0 ? -1 : 1) * ($day_totals[11] + ($remaining_days_qty[11] > 0 ? 1 : 0)),
-                                'day12' => ($row['day12'] < 0 ? -1 : 1) * ($day_totals[12] + ($remaining_days_qty[12] > 0 ? 1 : 0)),
-                                'day13' => ($row['day13'] < 0 ? -1 : 1) * ($day_totals[13] + ($remaining_days_qty[13] > 0 ? 1 : 0)),
-                                'day14' => ($row['day14'] < 0 ? -1 : 1) * ($day_totals[14] + ($remaining_days_qty[14] > 0 ? 1 : 0)),
-                                'day15' => ($row['day15'] < 0 ? -1 : 1) * ($day_totals[15] + ($remaining_days_qty[15] > 0 ? 1 : 0)),
-                                'day16' => ($row['day16'] < 0 ? -1 : 1) * ($day_totals[16] + ($remaining_days_qty[16] > 0 ? 1 : 0)),
-                                'day17' => ($row['day17'] < 0 ? -1 : 1) * ($day_totals[17] + ($remaining_days_qty[17] > 0 ? 1 : 0)),
-                                'day18' => ($row['day18'] < 0 ? -1 : 1) * ($day_totals[18] + ($remaining_days_qty[18] > 0 ? 1 : 0)),
-                                'day19' => ($row['day19'] < 0 ? -1 : 1) * ($day_totals[19] + ($remaining_days_qty[19] > 0 ? 1 : 0)),
-                                'day20' => ($row['day20'] < 0 ? -1 : 1) * ($day_totals[20] + ($remaining_days_qty[20] > 0 ? 1 : 0)),
-                                'day21' => ($row['day21'] < 0 ? -1 : 1) * ($day_totals[21] + ($remaining_days_qty[21] > 0 ? 1 : 0)),
-                                'day22' => ($row['day22'] < 0 ? -1 : 1) * ($day_totals[22] + ($remaining_days_qty[22] > 0 ? 1 : 0)),
-                                'day23' => ($row['day23'] < 0 ? -1 : 1) * ($day_totals[23] + ($remaining_days_qty[23] > 0 ? 1 : 0)),
-                                'day24' => ($row['day24'] < 0 ? -1 : 1) * ($day_totals[24] + ($remaining_days_qty[24] > 0 ? 1 : 0)),
-                                'day25' => ($row['day25'] < 0 ? -1 : 1) * ($day_totals[25] + ($remaining_days_qty[25] > 0 ? 1 : 0)),
-                                'day26' => ($row['day26'] < 0 ? -1 : 1) * ($day_totals[26] + ($remaining_days_qty[26] > 0 ? 1 : 0)),
-                                'day27' => ($row['day27'] < 0 ? -1 : 1) * ($day_totals[27] + ($remaining_days_qty[27] > 0 ? 1 : 0)),
-                                'day28' => ($row['day28'] < 0 ? -1 : 1) * ($day_totals[28] + ($remaining_days_qty[28] > 0 ? 1 : 0)),
-                                'day29' => ($row['day29'] < 0 ? -1 : 1) * ($day_totals[29] + ($remaining_days_qty[29] > 0 ? 1 : 0)),
-                                'day30' => ($row['day30'] < 0 ? -1 : 1) * ($day_totals[30] + ($remaining_days_qty[30] > 0 ? 1 : 0)),
-                                'day31' => ($row['day31'] < 0 ? -1 : 1) * ($day_totals[31] + ($remaining_days_qty[31] > 0 ? 1 : 0)),
+                                'day1'=> abs(($day_totals['1'] < 0 ? -1 : 1) * ($day_totals['1'] + ($remaining_days_qty['1'] > 0 && $pcIndex < $remaining_days_qty['1'] ? 1 : 0))),
+                                'day2'=> abs(($day_totals['2'] < 0 ? -1 : 1) * ($day_totals['2'] + ($remaining_days_qty['2'] > 0 && $pcIndex < $remaining_days_qty['2'] ? 1 : 0))),
+                                'day3'=> abs(($day_totals['3'] < 0 ? -1 : 1) * ($day_totals['3'] + ($remaining_days_qty['3'] > 0 && $pcIndex < $remaining_days_qty['3'] ? 1 : 0))),
+                                'day4'=> abs(($day_totals['4'] < 0 ? -1 : 1) * ($day_totals['4'] + ($remaining_days_qty['4'] > 0 && $pcIndex < $remaining_days_qty['4'] ? 1 : 0))),
+                                'day5'=> abs(($day_totals['5'] < 0 ? -1 : 1) * ($day_totals['5'] + ($remaining_days_qty['5'] > 0 && $pcIndex < $remaining_days_qty['5'] ? 1 : 0))),
+                                'day6'=> abs(($day_totals['6'] < 0 ? -1 : 1) * ($day_totals['6'] + ($remaining_days_qty['6'] > 0 && $pcIndex < $remaining_days_qty['6'] ? 1 : 0))),
+                                'day7'=> abs(($day_totals['7'] < 0 ? -1 : 1) * ($day_totals['7'] + ($remaining_days_qty['7'] > 0 && $pcIndex < $remaining_days_qty['7'] ? 1 : 0))),
+                                'day8'=> abs(($day_totals['8'] < 0 ? -1 : 1) * ($day_totals['8'] + ($remaining_days_qty['8'] > 0 && $pcIndex < $remaining_days_qty['8'] ? 1 : 0))),
+                                'day9'=> abs(($day_totals['9'] < 0 ? -1 : 1) * ($day_totals['9'] + ($remaining_days_qty['9'] > 0 && $pcIndex < $remaining_days_qty['9'] ? 1 : 0))),
+                                'day10'=> abs(($day_totals['10'] < 0 ? -1 : 1) * ($day_totals['10'] + ($remaining_days_qty['10'] > 0 && $pcIndex < $remaining_days_qty['10'] ? 1 : 0))),
+                                'day11'=> abs(($day_totals['11'] < 0 ? -1 : 1) * ($day_totals['11'] + ($remaining_days_qty['11'] > 0 && $pcIndex < $remaining_days_qty['11'] ? 1 : 0))),
+                                'day12'=> abs(($day_totals['12'] < 0 ? -1 : 1) * ($day_totals['12'] + ($remaining_days_qty['12'] > 0 && $pcIndex < $remaining_days_qty['12'] ? 1 : 0))),
+                                'day13'=> abs(($day_totals['13'] < 0 ? -1 : 1) * ($day_totals['13'] + ($remaining_days_qty['13'] > 0 && $pcIndex < $remaining_days_qty['13'] ? 1 : 0))),
+                                'day14'=> abs(($day_totals['14'] < 0 ? -1 : 1) * ($day_totals['14'] + ($remaining_days_qty['14'] > 0 && $pcIndex < $remaining_days_qty['14'] ? 1 : 0))),
+                                'day15'=> abs(($day_totals['15'] < 0 ? -1 : 1) * ($day_totals['15'] + ($remaining_days_qty['15'] > 0 && $pcIndex < $remaining_days_qty['15'] ? 1 : 0))),
+                                'day16'=> abs(($day_totals['16'] < 0 ? -1 : 1) * ($day_totals['16'] + ($remaining_days_qty['16'] > 0 && $pcIndex < $remaining_days_qty['16'] ? 1 : 0))),
+                                'day17'=> abs(($day_totals['17'] < 0 ? -1 : 1) * ($day_totals['17'] + ($remaining_days_qty['17'] > 0 && $pcIndex < $remaining_days_qty['17'] ? 1 : 0))),
+                                'day18'=> abs(($day_totals['18'] < 0 ? -1 : 1) * ($day_totals['18'] + ($remaining_days_qty['18'] > 0 && $pcIndex < $remaining_days_qty['18'] ? 1 : 0))),
+                                'day19'=> abs(($day_totals['19'] < 0 ? -1 : 1) * ($day_totals['19'] + ($remaining_days_qty['19'] > 0 && $pcIndex < $remaining_days_qty['19'] ? 1 : 0))),
+                                'day20'=> abs(($day_totals['20'] < 0 ? -1 : 1) * ($day_totals['20'] + ($remaining_days_qty['20'] > 0 && $pcIndex < $remaining_days_qty['20'] ? 1 : 0))),
+                                'day21'=> abs(($day_totals['21'] < 0 ? -1 : 1) * ($day_totals['21'] + ($remaining_days_qty['21'] > 0 && $pcIndex < $remaining_days_qty['21'] ? 1 : 0))),
+                                'day22'=> abs(($day_totals['22'] < 0 ? -1 : 1) * ($day_totals['22'] + ($remaining_days_qty['22'] > 0 && $pcIndex < $remaining_days_qty['22'] ? 1 : 0))),
+                                'day23'=> abs(($day_totals['23'] < 0 ? -1 : 1) * ($day_totals['23'] + ($remaining_days_qty['23'] > 0 && $pcIndex < $remaining_days_qty['23'] ? 1 : 0))),
+                                'day24'=> abs(($day_totals['24'] < 0 ? -1 : 1) * ($day_totals['24'] + ($remaining_days_qty['24'] > 0 && $pcIndex < $remaining_days_qty['24'] ? 1 : 0))),
+                                'day25'=> abs(($day_totals['25'] < 0 ? -1 : 1) * ($day_totals['25'] + ($remaining_days_qty['25'] > 0 && $pcIndex < $remaining_days_qty['25'] ? 1 : 0))),
+                                'day26'=> abs(($day_totals['26'] < 0 ? -1 : 1) * ($day_totals['26'] + ($remaining_days_qty['26'] > 0 && $pcIndex < $remaining_days_qty['26'] ? 1 : 0))),
+                                'day27'=> abs(($day_totals['27'] < 0 ? -1 : 1) * ($day_totals['27'] + ($remaining_days_qty['27'] > 0 && $pcIndex < $remaining_days_qty['27'] ? 1 : 0))),
+                                'day28'=> abs(($day_totals['28'] < 0 ? -1 : 1) * ($day_totals['28'] + ($remaining_days_qty['28'] > 0 && $pcIndex < $remaining_days_qty['28'] ? 1 : 0))),
+                                'day29'=> abs(($day_totals['29'] < 0 ? -1 : 1) * ($day_totals['29'] + ($remaining_days_qty['29'] > 0 && $pcIndex < $remaining_days_qty['29'] ? 1 : 0))),
+                                'day30'=> abs(($day_totals['30'] < 0 ? -1 : 1) * ($day_totals['30'] + ($remaining_days_qty['30'] > 0 && $pcIndex < $remaining_days_qty['30'] ? 1 : 0))),
+                                'day31'=> abs(($day_totals['31'] < 0 ? -1 : 1) * ($day_totals['31'] + ($remaining_days_qty['31'] > 0 && $pcIndex < $remaining_days_qty['31'] ? 1 : 0))),
                             ]
                         );
-                        $remaining_qty--;
-                        foreach ($remaining_days_qty as $day => $value) {
-                            $remaining_days_qty[$day]--;
-                        }
+                        
                     }
                 } else {
                     // กรณีไม่มี PC พบ ให้ข้ามขั้นตอนนี้ไป
@@ -408,7 +424,7 @@ class ImportController extends Controller
                
             }   
 
-
+            
             $salesData = DB::table('tb_commission')
                 ->select(
                     'store_id',
