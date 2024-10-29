@@ -701,7 +701,6 @@ class CommissionController extends Controller
             'store_id',
             'item_number',
             'type_product',
-            'sale_total',
             'com',
             DB::raw('SUM(sale_qty) as total_sale_qty'),
             DB::raw('SUM(day1) as total_day1'),
@@ -739,9 +738,8 @@ class CommissionController extends Controller
         ->where('store_id', $store_id)
         ->where('as_of_month', $var_month)
         ->where('as_of_year', $year)
-        ->groupBy('supplier_number', 'store_id', 'item_number', 'type_product', 'sale_total', 'com')
+        ->groupBy('supplier_number', 'store_id', 'item_number', 'type_product',  'com')
         ->get();
-
         // Query PC information in the store
         $pcs = DB::table('tb_pc')->where('store_id', $store_id)
                                 ->whereNull('status_pc')
@@ -938,7 +936,7 @@ class CommissionController extends Controller
         $other_data = str_replace(',', '',$request->input('other'));
         $remark_data = $request->input('remark');
         $pc_qty_data = $request->input('pc_qty');
-
+        
         try {
 
                 foreach ($pc_qty_data as $itemNumber => $pcs) {
@@ -946,17 +944,20 @@ class CommissionController extends Controller
                         // Prepare the update data array
                         $update_data = [];
                         foreach ($days as $day => $saleQty) {
-                            $dayField = 'day' . $day;
+                            $dayField = $day;
                             $update_data[$dayField] = $saleQty; // Store day fields in associative array
                         }
-        
+
                         // Get product and price information
                         $product = Product::where('item_number', $itemNumber)->first();
-                        $price = Price::where('item_number', $itemNumber)->first();
+                        $price = Price::where('item_number', $itemNumber)
+                                    ->where('as_of_month', $var_month)
+                                    ->where('as_of_year', $year)
+                                    ->first();
         
                         $sale_total_price_item = 0;
                         $sale_qty = 0;
-        
+
                         // Calculate sale_total_price_item and sale_qty
                         foreach ($update_data as $dayField => $day_qty) {
                             if ($day_qty != 0) {
@@ -969,25 +970,27 @@ class CommissionController extends Controller
                                 $sale_qty += $day_qty;
                             }
                         }
-        
+
                         // Check if existing data exists
                         $existingData = Commission::where('store_id', $store_id)
-                            ->where('itemNumber', $itemNumber)
+                            ->where('item_number', $itemNumber)
                             ->where('id_pc', $id_pc)
                             ->where('as_of_month', $var_month)
                             ->where('as_of_year', $year)
                             ->first();
+
+                            
 
                         if ($existingData) {
                             $update_fields = array_merge([
                                 'sale_total' => $sale_total_price_item,
                                 'sale_qty' => $sale_qty,
                             ], $update_data);
-                        
+
                             Commission::updateOrCreate(
                                 [
                                     'store_id' => $store_id,
-                                    'itemNumber' => $itemNumber,
+                                    'item_number' => $itemNumber,
                                     'id_pc' => $id_pc,
                                     'as_of_month' => $var_month,
                                     'as_of_year' => $year,
@@ -995,20 +998,20 @@ class CommissionController extends Controller
                                 $update_fields
                             );
                         } else {
-                
+                            
                             $pc_with_data = Commission::where('store_id', $store_id)
                             ->where('itemNumber', $itemNumber)
                             ->where('as_of_month', $var_month)
                             ->where('as_of_year', $year)
                             ->first(); // คัดลอกจาก PC แรกที่มีข้อมูล
-
+                            
                             $create_fields = array_merge([
                                 'supplier_number' => $pc_with_data->supplier_number,
                                 'store_id' => $pc_with_data->store_id,
                                 'type_store' => $pc_with_data->type_store,
                                 'as_of_month' => $var_month,
                                 'as_of_year' => $year,
-                                'itemNumber' => $pc_with_data->itemNumber,
+                                'item_number' => $pc_with_data->itemNumber,
                                 'type_product' => $pc_with_data->type_product,
                                 'sale_total' => $sale_total_price_item,
                                 'sale_qty' => $sale_qty,
@@ -1021,7 +1024,7 @@ class CommissionController extends Controller
                                 Commission::create($create_fields);
                             }
                         }
-    
+                        
                     $salesData = DB::table('tb_commission')
                         ->select(
                             'store_id',
@@ -1292,13 +1295,17 @@ class CommissionController extends Controller
                             }
                         
                             
-                        
+                            $advance_pay = $advance_data[$data->id_pc] ?? 0;
+                            $remark_pay = $remark_data[$data->id_pc] ?? NULL;
+                            $other_pay = $other_data[$data->id_pc] ?? 0;
                             
                         
                             //คำนวณ net_com และ net_pay
                             $data->pay_com = $data->com_tv + $data->com_av + $data->com_ha;
                             $data->net_com = $data->pay_com + $data->extra_tv + $data->extra_ha;
-                            $data->net_pay = $data->net_com ;
+
+                            $data->net_pay = $data->net_com - $advance_pay;
+                            $data->net_pay = $data->net_pay + $other_pay;
                             $sale_total = $data->sale_tv+$data->sale_av+$data->sale_ha;
                         
                             //คำนวณ dis_pay
@@ -1341,6 +1348,9 @@ class CommissionController extends Controller
                                 'extra_ha' => $data->extra_ha,
                                 'pay_com' => $data->pay_com,
                                 'net_com' => $data->net_com,
+                                'advance_pay' => $advance_pay,
+                                'other' => $other_pay ,
+                                'remark' => $remark_pay ,
                                 'net_pay' => $data->net_pay,
                                 'dis_pay' => $data->dis_pay
                             ]);
@@ -1454,17 +1464,17 @@ class CommissionController extends Controller
         return redirect()->route('commissions.index')->withErrors(['error' => $e->getMessage()]);
         }
     }
-    protected function calculateCom($pro_model)
+    protected function calculateCom($item_number)
     {
-        // Example: Retrieve the commission from tb_product based on pro_model
-        $product = product::where('pro_model', $pro_model)
+        // Example: Retrieve the commission from tb_product based on item_number
+        $product = product::where('item_number', $item_number)
                         ->whereNull('status_product') 
                         ->first();
         return $product ? $product->com : 0;
     }
     public function updateTarget(Request $request)
     {
-        dd($request->all());
+        // dd($request->all());
         $targets = $request->input('tarket');
         $type_pcs = $request->input('type_pc');
         $var_month = $request->input('var_month');
@@ -1473,21 +1483,21 @@ class CommissionController extends Controller
         try{
 
             $pro_commissions = DB::table('tb_commission')
-            ->select('pro_model') // เลือกเฉพาะ pro_model
+            ->select('item_number') // เลือกเฉพาะ item_number
             ->where('as_of_month', $var_month)
             ->where('as_of_year', $year)
-            ->distinct() // ใช้ distinct เพื่อลดการซ้ำของ pro_model
+            ->distinct() // ใช้ distinct เพื่อลดการซ้ำของ item_number
             ->get();
-        
-        foreach ($pro_commissions as $row_pro) {
-            // คำนวณค่า com สำหรับแต่ละ pro_model
             
-            $com = $this->calculateCom($row_pro->pro_model);
+        foreach ($pro_commissions as $row_pro) {
+            // คำนวณค่า com สำหรับแต่ละ item_number
+            
+            $com = $this->calculateCom($row_pro->item_number);
 
             $affectedRows = DB::table('tb_commission')
             ->where('as_of_month', $var_month)
             ->where('as_of_year', $year)
-            ->where('pro_model', $row_pro->pro_model)
+            ->where('item_number', $row_pro->item_number)
             ->update([
                 'com' => $com,
             ]);
@@ -1512,28 +1522,21 @@ class CommissionController extends Controller
 
 
                 $salesData = DB::table('tb_commission')
-                ->select(
-                    'store_id',
-                    'id_pc',
-                    // DB::raw('SUM(CASE WHEN type_product = "TV" THEN sale_amt_vat * sale_qty ELSE 0 END) as sale_tv'),
-                    DB::raw('SUM(CASE WHEN type_product = "TV" AND sale_qty > 0  THEN sale_amt_vat * sale_qty
-                                WHEN type_product = "TV" AND sale_qty < 0 THEN -1 * ABS(sale_amt_vat) * ABS(sale_qty)
-                                ELSE 0 END) as sale_tv'),
-                    DB::raw('SUM(CASE WHEN type_product = "TV" THEN sale_qty ELSE 0 END) as unit_tv'),
-                    // DB::raw('SUM(CASE WHEN type_product = "AV" THEN sale_amt_vat * sale_qty ELSE 0 END) as sale_av'),
-                    DB::raw('SUM(CASE WHEN type_product = "AV" AND sale_qty > 0  THEN sale_amt_vat * sale_qty
-                                WHEN type_product = "AV" AND sale_qty < 0 THEN -1 * ABS(sale_amt_vat) * ABS(sale_qty)
-                                ELSE 0 END) as sale_av'),
-                    DB::raw('SUM(CASE WHEN type_product = "AV" THEN sale_qty ELSE 0 END) as unit_av'),
-                    // DB::raw('SUM(CASE WHEN type_product = "HA" THEN sale_amt_vat * sale_qty ELSE 0 END) as sale_ha'),
-                    DB::raw('SUM(CASE WHEN type_product = "HA" AND sale_qty > 0  THEN sale_amt_vat * sale_qty
-                                WHEN type_product = "HA" AND sale_qty < 0 THEN -1 * ABS(sale_amt_vat) * ABS(sale_qty)
-                                ELSE 0 END) as sale_ha'),
-                    DB::raw('SUM(CASE WHEN type_product = "HA" THEN sale_qty ELSE 0 END) as unit_ha')
+                    ->select(
+                        'store_id',
+                        'id_pc',
+
+                        DB::raw('SUM(CASE WHEN type_product = "TV" THEN sale_total ELSE 0 END) as sale_tv'),
+                        DB::raw('SUM(CASE WHEN type_product = "TV" THEN sale_qty ELSE 0 END) as unit_tv'),
+                        
+                        DB::raw('SUM(CASE WHEN type_product = "AV" THEN sale_total ELSE 0 END) as sale_av'),
+                        DB::raw('SUM(CASE WHEN type_product = "AV" THEN sale_qty ELSE 0 END) as unit_av'),
+
+                        DB::raw('SUM(CASE WHEN type_product = "HA" THEN sale_total ELSE 0 END) as sale_ha'),
+                        DB::raw('SUM(CASE WHEN type_product = "HA" THEN sale_qty ELSE 0 END) as unit_ha')
                     )
-                    ->where('as_of_month', $request->input('var_month'))
-                    ->where('as_of_year', $request->input('year'))
-                    ->where('id_pc', $id_pc)
+                    ->where('as_of_month', $var_month)
+                    ->where('as_of_year', $year)
                     ->groupBy('store_id', 'id_pc')
                     ->get();
                 
@@ -1545,11 +1548,13 @@ class CommissionController extends Controller
                         DB::raw('SUM(CASE WHEN type_product = "AV" THEN sale_qty * com ELSE 0 END) as normalcom_av'),
                         DB::raw('SUM(CASE WHEN type_product = "HA" THEN sale_qty * com ELSE 0 END) as normalcom_ha')
                     )
-                    ->where('as_of_month', $request->input('var_month'))
-                    ->where('as_of_year', $request->input('year'))
-                    ->where('id_pc', $id_pc)
+                    ->where('as_of_month', $var_month)
+                    ->where('as_of_year', $year)
                     ->groupBy('store_id', 'id_pc')
                     ->get();
+            
+            
+
                     $combinedData = $salesData->map(function ($sale) use ($commissionData) {
                         $commission = $commissionData->first(function ($item) use ($sale) {
                             return $item->store_id == $sale->store_id && $item->id_pc == $sale->id_pc;
@@ -1579,7 +1584,8 @@ class CommissionController extends Controller
                         $pc = $pcs->first();
                         $sale_tv_av = $data->sale_tv + $data->sale_av;
                         if ($sale_tv_av != 0) {
-                        $data->achieve = (($data->sale_tv + $data->sale_av) * 100) / $target;
+                        // $data->achieve = (($data->sale_tv + $data->sale_av) * 100) / $target;
+                        $data->achieve = $target != 0 ? (($data->sale_tv + $data->sale_av) * 100) / $target: 0;
                         } else {
                             $data->achieve = 0; // หรือใช้ค่าอื่นๆตามที่ต้องการ
                         }
@@ -1784,7 +1790,6 @@ class CommissionController extends Controller
                             'dis_pay' => $data->dis_pay
                         
                         ]);
-                        
                         
                     }
                 
