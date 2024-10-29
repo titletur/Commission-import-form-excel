@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Store manage</title>
-    <link rel="icon" href="{{ asset('bigc.jpg') }}" type="image/x-icon">
+    <link rel="icon" href="{{ asset('icon.jpg') }}" type="image/x-icon">
     <link rel="stylesheet" href="{{ asset('css/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ asset('css/cssfont.css') }}">
     <link rel="stylesheet" href="{{ asset('css/chosen.min.css') }}">
@@ -127,6 +127,7 @@
                                 <option value="A">Type A</option>
                                 <option value="B">Type B</option>
                                 <option value="C">Type C</option>
+                                <option value="CECO">Type CECO+</option>
                                 <!-- Add more options as needed -->
                             </select>
                         </div>
@@ -174,6 +175,7 @@
                                 <option value="A">Type A</option>
                                 <option value="B">Type B</option>
                                 <option value="C">Type C</option>
+                                <option value="CECO">Type CECO+</option>
                             </select>
                         </div>
                         <input type="hidden" id="store_id_hidden" name="id">
