@@ -39,6 +39,7 @@ class pcController extends Controller
             'code_pc' => 'required|string',
             'name_pc' => 'nullable|string',
             'type_pc' => 'nullable|string',
+            'sale_type_product' => 'nullable|array', 
             'tarket' => 'nullable|string',
             'salary' => 'nullable|string',
             
@@ -54,6 +55,7 @@ class pcController extends Controller
             [
                 'type_store' => $request->input('type_store'),
                 'type_pc' => $request->input('type_pc'),
+                'sale_type_product' => json_encode($request->input('sale_type_product')), 
                 'tarket' => $request->input('tarket'),
                 'salary' => $request->input('salary')
             ]
@@ -81,12 +83,20 @@ class pcController extends Controller
             'code_pc' => 'required|string',
             'name_pc' => 'nullable|string',
             'type_pc' => 'nullable|string',
+            'sale_type_product' => 'nullable|array', 
             'tarket' => 'nullable|string',
             'salary' => 'nullable|string',
         ]);
     
         $pc = tb_pc::findOrFail($id);
-        $pc->update($request->all());
+        // $pc->update($request->all());
+        $data = $request->except('sale_type_product');
+        if ($request->has('sale_type_product')) {
+            $data['sale_type_product'] = json_encode($request->input('sale_type_product')); // Store as JSON array
+        }
+
+        $pc->update($data);
+        
     
         return redirect()->route('pc.index')->with('success', 'PC updated successfully.');
         } catch (\Exception $e) {
