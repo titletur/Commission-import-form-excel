@@ -69,6 +69,7 @@
                     <th>Code PC</th>
                     <th>Name</th>
                     <th>Type PC</th>
+                    <th>Sale Type product</th>
                     <th>Target</th>
                     <th>Salary</th>
                     <th>Actions</th>
@@ -83,11 +84,12 @@
                         <td>{{ $pc->code_pc }}</td>
                         <td>{{ $pc->name_pc }}</td>
                         <td>{{ $pc->type_pc }}</td>
+                        <td>{{ $pc->sale_type_product }}</td>
                         <td>{{ $pc->tarket }}</td>
                         <td>{{ $pc->salary }}</td>
                         <td>
                             @if(in_array('Edit_pc', $permissions))
-                            <button class="btn btn-warning edit-btn" data-id="{{ $pc->id }}" data-store_id="{{ $pc->store_id }}" data-type_store="{{ $pc->type_store }}" data-code_pc="{{ $pc->code_pc }}" data-name_pc="{{ $pc->name_pc }}" data-type_pc="{{ $pc->type_pc }}" data-tarket="{{ $pc->tarket }}" data-salary="{{ $pc->salary }}">Edit</button>
+                            <button class="btn btn-warning edit-btn" data-id="{{ $pc->id }}" data-store_id="{{ $pc->store_id }}" data-type_store="{{ $pc->type_store }}" data-code_pc="{{ $pc->code_pc }}" data-name_pc="{{ $pc->name_pc }}" data-type_pc="{{ $pc->type_pc }}" data-sale_type_product="{{ $pc->sale_type_product }}" data-tarket="{{ $pc->tarket }}" data-salary="{{ $pc->salary }}">Edit</button>
                             @endif
                             &nbsp;
                             @if(in_array('Del_pc', $permissions))
@@ -146,6 +148,16 @@
                                 <option value="PC_promotion">PC Promotion</option>
                                 <option value="No PC">No PC</option>
                                 <!-- Add more options as needed -->
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="add_sale_type_product" class="form-label">Sale Type Product</label>
+                            <select id="add_sale_type_product" name="sale_type_product[]" multiple class="form-control chosen-select" required>
+                                <option value="">Select Type product</option>
+                                <option value="TV">TV</option>
+                                <option value="AV">AV</option>
+                                <option value="HA">HA</option>
+                                <option value="AIR">AIR</option>
                             </select>
                         </div>
                         <div class="mb-3">
@@ -216,6 +228,16 @@
                             </select>
                         </div>
                         <div class="mb-3">
+                            <label for="sale_type_product" class="form-label">Sale Type Product</label>
+                            <select id="sale_type_product" name="sale_type_product[]" multiple class="form-control chosen-select" required>
+                                <option value="">Select Type product</option>
+                                <option value="TV">TV</option>
+                                <option value="AV">AV</option>
+                                <option value="HA">HA</option>
+                                <option value="AIR">AIR</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
                             <label for="tarket" class="form-label">Target</label>
                             <input type="text" class="form-control" id="tarket" name="tarket">
                         </div>
@@ -277,6 +299,7 @@
                 var code_pc = $(this).data('code_pc');
                 var name_pc = $(this).data('name_pc');
                 var type_pc = $(this).data('type_pc');
+                var sale_type_product = $(this).data('sale_type_product');
                 var tarket = $(this).data('tarket');
                 var salary = $(this).data('salary');
 
@@ -285,6 +308,7 @@
                 $('#code_pc').val(code_pc);
                 $('#name_pc').val(name_pc);
                 $('#type_pc').val(type_pc).trigger("chosen:updated");
+                $('#sale_type_product').val(sale_type_product).trigger("chosen:updated");
                 $('#tarket').val(tarket);
                 $('#salary').val(salary);
                 $('#pc_id_hidden').val(id);
