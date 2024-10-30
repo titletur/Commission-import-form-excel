@@ -11,6 +11,6 @@ class tb_pc extends Model
     protected $table = 'tb_pc';
     protected $fillable = [
         'store_id', 'type_store', 'code_pc', 'name_pc', 
-        'type_pc', 'tarket', 'salary'
+        'type_pc','sale_type_product', 'tarket', 'salary'
     ];
 }
