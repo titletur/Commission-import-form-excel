@@ -102,6 +102,52 @@
             padding-right: 5%;
         }
     </style>
+    <style>
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 46px;
+            height: 24px;
+        }
+    
+        .switch input { 
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+    
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: 0.4s;
+            border-radius: 12px;
+        }
+    
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: 0.4s;
+            border-radius: 50%;
+        }
+    
+        input:checked + .slider {
+            background-color: #e90b0b;
+        }
+    
+        input:checked + .slider:before {
+            transform: translateX(22px);
+        }
+    </style>
 </head>
 <body>
     <div id="loading-overlay" class="loading-overlay">
