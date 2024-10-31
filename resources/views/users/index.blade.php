@@ -153,6 +153,20 @@
                                         &nbsp;&nbsp;&nbsp;<input class="form-check-input" type="checkbox" id="Upload_price" name="permissions[]" value="Upload_price">
                                         <label class="form-check-label" for="Upload_price">Upload price</label>
                                     </div>
+
+                                    <div class="form-check">
+                                        &nbsp;&nbsp;&nbsp;<input class="form-check-input" type="checkbox" id="switch_on_off_enabled" name="permissions[]" value="switch_on_off_enabled">
+                                        <label class="form-check-label" for="switch_on_off_enabled">Switch on off QTY</label>
+                                    </div>
+                                    <div class="form-check">
+                                        &nbsp;&nbsp;&nbsp;<input class="form-check-input" type="checkbox" id="switch_on_off_price" name="permissions[]" value="switch_on_off_price">
+                                        <label class="form-check-label" for="switch_on_off_price">Switch on off price</label>
+                                    </div>
+                                    <div class="form-check">
+                                        &nbsp;&nbsp;&nbsp;<input class="form-check-input" type="checkbox" id="switch_on_off_target" name="permissions[]" value="switch_on_off_target">
+                                        <label class="form-check-label" for="switch_on_off_target">Switch on off target</label>
+                                    </div>
+
                                     <div class="form-check">
                                         &nbsp;&nbsp;&nbsp;<input class="form-check-input" type="checkbox" id="sale_in" name="permissions[]" value="sale_in">
                                         <label class="form-check-label" for="sale_in">Sale IN</label>
@@ -308,6 +322,18 @@
                                     <div class="form-check">
                                         &nbsp;&nbsp;&nbsp;<input class="form-check-input" type="checkbox" id="Upload_price" name="permissions[]" value="Upload_price">
                                         <label class="form-check-label" for="Upload_price">Upload price</label>
+                                    </div>
+                                    <div class="form-check">
+                                        &nbsp;&nbsp;&nbsp;<input class="form-check-input" type="checkbox" id="switch_on_off_enabled" name="permissions[]" value="switch_on_off_enabled">
+                                        <label class="form-check-label" for="switch_on_off_enabled">Switch on off QTY</label>
+                                    </div>
+                                    <div class="form-check">
+                                        &nbsp;&nbsp;&nbsp;<input class="form-check-input" type="checkbox" id="switch_on_off_price" name="permissions[]" value="switch_on_off_price">
+                                        <label class="form-check-label" for="switch_on_off_price">Switch on off price</label>
+                                    </div>
+                                    <div class="form-check">
+                                        &nbsp;&nbsp;&nbsp;<input class="form-check-input" type="checkbox" id="switch_on_off_target" name="permissions[]" value="switch_on_off_target">
+                                        <label class="form-check-label" for="switch_on_off_target">Switch on off target</label>
                                     </div>
                                     <div class="form-check">
                                         &nbsp;&nbsp;&nbsp;<input class="form-check-input" type="checkbox" id="edit_sale_in" name="permissions[]" value="sale_in">
