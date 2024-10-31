@@ -12,7 +12,7 @@ class tb_commission_sale extends Model
 
     protected $fillable = [
         'is_sale','as_of_month', 'as_of_year','target', 'add_total' , 'achieve', 'base_com', 'com_sale','sale_tv',
-        'unit_tv','sale_av','unit_av','sale_ha','unit_ha','sale_out','extra_sale_out','extra_unit',
+        'unit_tv','sale_av','unit_av','sale_ha','unit_ha','sale_air','unit_air','sale_out','extra_sale_out','extra_unit',
         'extra_avg','other','total','remark'
     ];
 }
