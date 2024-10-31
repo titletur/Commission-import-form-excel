@@ -48,7 +48,9 @@ Route::middleware(['auth', CheckImportPermission::class])->group(function () {
     //update data commission sale
     Route::post('update_commission_sale', [CommissionController::class, 'updateCommission_sale'])->name('update_commission_sale');
     
-    
+    Route::post('/update-access/{month}/{year}', [CommissionController::class, 'updateAccess'])->name('update-access');
+
+
     
     //update status complated
     Route::post('/status/updateOrCreate', [CommissionController::class, 'updateOrCreate'])->name('status.updateOrCreate');
