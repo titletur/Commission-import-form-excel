@@ -41,28 +41,26 @@
         @php
         $permissions = json_decode(Auth::user()->permissions, true); // แปลง JSON เป็น array
         @endphp
+        
         <!-- Table to display monthly commission data -->
         <table class="table table-bordered table-striped">
             <thead>
                 <tr>
-                    <th width="8%">Month</th>
+                    <th width="8%" colspan="2">Month</th>
                     <th width="15%">Upload</th>
                     <th width="8%">Sale In</th>
-                    <th width="12%">Price</th>
+                    <th width="12%" colspan="2">Price</th>
                     <th width="12%">Sale Out</th>
                     <th width="12%">Commission</th>
-                    <th width="15%">Target</th>
+                    <th width="15%" colspan="2">Target</th>
                     <th width="18%">Status</th>
                 </tr>
             </thead>
             <tbody>
                 @foreach ($monthlyData as $data)
                     <tr>
-                        <td>
-                            {{-- <a href="{{ $data['show_link'] }}" class="{{ $data['disabled'] ? 'disabled' : '' }}">
-                                {{ $data['month'] }}
-                            </a> --}}
-                            @if(in_array('Edit_qty', $permissions))
+                        <td width="5%">
+                            @if(in_array('Edit_qty', $permissions) && ($data['show_link_enabled'] =='0'))
                             <a href="{{ $data['disabled'] ? '#' : $data['show_link'] }}" 
                                 class="{{ $data['disabled'] ? 'disabled' : '' }}" 
                                 style="{{ $data['disabled'] ? 'pointer-events: none; color: gray;' : '' }}">
@@ -70,6 +68,26 @@
                             </a>
                             @else
                                 {{ $data['month'] }}
+                            @endif
+                        </td>
+                        <td width="3%"><br>
+                            @if(in_array('switch_on_off_enabled', $permissions))
+                            <form method="POST" action="{{ route('update-access', ['month' => $data['var_month'], 'year' => $data['var_year']]) }}"> 
+                                @csrf
+                                <input type="hidden" name="field" value="show_link_enabled">
+                                <input type="hidden" name="month" value="{{ $data['var_month'] }}">
+                                <input type="hidden" name="year" value="{{ $data['var_year'] }}">
+
+                                <label class="switch">
+                                    <input type="checkbox" name="isEnabled" value="true" {{ $data['show_link_enabled'] ? 'checked' : '' }} onchange="this.form.submit()">
+                                    <span class="slider round"></span>
+                                </label>
+                            </form>
+                            @else
+                                <label class="switch">
+                                    <input type="checkbox" disabled name="isEnabled" value="true" {{ $data['show_link_enabled'] ? 'checked' : '' }} >
+                                    <span class="slider round"></span>
+                                </label>
                             @endif
                         </td>
                         <td>
@@ -94,21 +112,40 @@
                             </button>
                             @endif
                         </td>
-                        <td>
-                            @if(in_array('Upload_price', $permissions))
+                        <td width="8%">
+                            @if(in_array('Upload_price', $permissions) && ($data['price_link_enabled'] =='0'))
                             <a href="{{ $data['disabled'] ? '#' : $data['price_link'] }}" 
                             class="{{ $data['disabled'] ? 'disabled' : '' }}"
                             style="{{ $data['disabled'] ? 'pointer-events: none; color: gray;' : '' }}">
                             <button type="button" class="btn btn-outline-success"><img src="{{ asset('money.png') }}" width="35" height="28" alt="Import_price"> Price</button>
                             </a>
                             @else
-                            <button type="button" class="btn btn-outline-success"><img src="{{ asset('money.png') }}" width="24" height="24" alt="Import_price"> Price</button>
+                            <button type="button" class="btn btn-outline-success"><img src="{{ asset('money.png') }}" width="35" height="28" alt="Import_price"> Price</button>
+                            @endif
+                        </td>
+                        <td width="4%">
+                            @if(in_array('switch_on_off_price', $permissions))
+                            <form method="POST" action="{{ route('update-access', ['month' => $data['var_month'], 'year' => $data['var_year']]) }}"> 
+                                @csrf
+                                <input type="hidden" name="field" value="price_link_enabled">
+                                <input type="hidden" name="month" value="{{ $data['var_month'] }}">
+                                <input type="hidden" name="year" value="{{ $data['var_year'] }}">
+                                <label class="switch">
+                                    <input type="checkbox" name="isEnabled" value="true" {{ $data['price_link_enabled'] ? 'checked' : '' }} onchange="this.form.submit()">
+                                    <span class="slider round"></span>
+                                </label>
+                            </form>
+                            @else
+                                <label class="switch">
+                                    <input type="checkbox" disabled name="isEnabled" value="true" {{ $data['price_link_enabled'] ? 'checked' : '' }} >
+                                    <span class="slider round"></span>
+                                </label>
                             @endif
                         </td>
                         <td>{{ number_format($data['sale_out'], 0) }}</td>
                         <td>{{ number_format($data['pay_com'], 0) }}</td>
-                        <td>
-                            @if(in_array('Edit_target', $permissions))
+                        <td width="11%">
+                            @if(in_array('Edit_target', $permissions) && ($data['target_link_enabled'] =='0'))
                             <a href="{{ $data['disabled'] ? '#' : $data['target_link'] }}" 
                             class="{{ $data['disabled'] ? 'disabled' : '' }}"
                             style="{{ $data['disabled'] ? 'pointer-events: none; color: gray;' : '' }}">
@@ -116,6 +153,25 @@
                             </a>
                             @else
                             <img src="{{ asset('edit.jpg') }}" width="17" height="17" alt="Import"> Edit Target
+                            @endif
+                        </td>
+                        <td width="4%">
+                            @if(in_array('switch_on_off_target', $permissions))
+                            <form method="POST" action="{{ route('update-access', ['month' => $data['var_month'], 'year' => $data['var_year']]) }}"> 
+                                @csrf
+                                <input type="hidden" name="field" value="target_link_enabled">
+                                <input type="hidden" name="month" value="{{ $data['var_month'] }}">
+                                <input type="hidden" name="year" value="{{ $data['var_year'] }}">
+                                <label class="switch">
+                                    <input type="checkbox" name="isEnabled" value="true" {{ $data['target_link_enabled'] ? 'checked' : '' }} onchange="this.form.submit()">
+                                    <span class="slider round"></span>
+                                </label>
+                            </form>
+                            @else
+                                <label class="switch">
+                                    <input type="checkbox" disabled name="isEnabled" value="true" {{ $data['target_link_enabled'] ? 'checked' : '' }} >
+                                    <span class="slider round"></span>
+                                </label>
                             @endif
                         </td>
                         <td>
@@ -147,7 +203,11 @@
             </tbody>
         </table>
     </div>
-
+    
+    
+       
+    </script>
+    
     <div class="modal fade" id="saleInModal" tabindex="-1" role="dialog" aria-labelledby="saleInModalLabel" aria-hidden="true">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
@@ -187,3 +247,40 @@
         });
     </script>
 @endsection
+
+
+<script>
+    function toggleAccess(id, field, isEnabled) {
+        fetch(`/update-access/${id}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            },
+            body: JSON.stringify({
+                field: field,
+                isEnabled: isEnabled
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                Swal.fire({
+                    title: 'Updated!',
+                    text: 'Access has been updated successfully.',
+                    icon: 'success',
+                    confirmButtonText: 'OK'
+                });
+            } else {
+                Swal.fire({
+                    title: 'Error!',
+                    text: 'Failed to update access.',
+                    icon: 'error',
+                    confirmButtonText: 'OK'
+                });
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    }
+</script>
+
