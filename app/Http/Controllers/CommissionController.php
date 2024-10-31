@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\DB;
 use App\Models\main_commission;
 use App\Models\Commission;
 use App\Models\tb_commission_sale;
+use App\Models\AccessControl;
 use App\Models\tb_status;
 use App\Models\tb_pc;
 use App\Models\tb_month;
@@ -34,6 +35,7 @@ class CommissionController extends Controller
         $monthlyData = [];
             foreach ($months as $month) {
                 $status = tb_status::where('as_of_month', $month->var_month)->where('as_of_year', $year)->first();
+                $access = AccessControl::where('month', $month->var_month)->where('year', $year)->first();
 
             $monthlyData[] = [
                 'month' => $month->short_en,
@@ -48,11 +50,35 @@ class CommissionController extends Controller
                 'show_link' => route('commissions.show', ['year' => $year, 'month' => $month->short_en , 'var_month' => $month->var_month]),
 
                 'status' => $status ? $status->status_com : 0,
+                'show_link_enabled' => $access ? $access->show_link_enabled : 0,
+                'price_link_enabled' => $access ? $access->price_link_enabled : 0,
+                'target_link_enabled' => $access ? $access->target_link_enabled : 0,
                 'disabled' => $status && $status->status_com == 1
             ];
         }
         return view('index', compact('monthlyData', 'year', 'years', 'months'));
     }
+
+    public function updateAccess($months, $years, Request $request)
+    {
+        $field = $request->input('field'); 
+        $month = $request->input('month');
+        $year = $request->input('year');
+        $isEnabled = $request->input('isEnabled') == 'true' ? true : false; // ตรวจสอบค่าที่ส่งมา
+
+        $accessControl = AccessControl::updateOrCreate(
+            [
+                'month' => $month,
+                'year' => $year,
+            ],
+            [
+                $field => $isEnabled
+            ]
+        );
+
+        return redirect()->back()->with('success', 'Status updated successfully!');
+    }
+
 
     public function show($year, $month , $var_month)
     {
