@@ -316,19 +316,94 @@ class ImportController extends Controller
                         ]
                     );
                 } else if ($pcs->count() > 1) {
-                    $sale_qty_per_pc = (int)(abs($row['net_sale_qty_mtd']) / $pcs->count());
-                    $remaining_qty = abs($row['net_sale_qty_mtd']) - ($sale_qty_per_pc * $pcs->count());
+                        
+                    $product = product::where('item_number', $row['item_number'])->first();
+                    $price = Price::where('item_number', $row['item_number'])->first();
+
+                    $pc_qtys = tb_pc::whereNull('status_pc')
+                    ->where('store_id', $row['location_number'])
+                    ->whereJsonContains('sale_type_product', $product->type_product)
+                    ->get();
+                    if ($pc_qtys->count() == 1) {
+                        $pc = $pc_qtys->first();
+                        $sale_total_price_item = 0;
+                        for ($num_qty_price = 1; $num_qty_price <= 31; $num_qty_price++) {
+                            if ($row['day'.$num_qty_price] != 0 && $row['day'.$num_qty_price] !== null) {
+
+                                $price_column = 'price_day' . $num_qty_price;
+
+                                if (isset($price->$price_column) && $price->$price_column != 0) {
+                                    $sale_total_price_item += $row['day'.$num_qty_price] * $price->$price_column ;
+                                }else{
+                                    $sale_total_price_item += $row['day'.$num_qty_price] * $product->price_vat ;
+                                }
+
+                            }
+                        }
+                        Commission::updateOrInsert(
+                            // เงื่อนไขในการเช็คว่ามีข้อมูลอยู่แล้วหรือไม่
+                            [
+                                'supplier_number' => $row['supplier_number'],
+                                'store_id' => $row['location_number'],
+                                'as_of_month' => $row['as_of_month'],
+                                'as_of_year' => $row['as_of_year'],
+                                'item_number' => $row['item_number'],
+                                'id_pc' => $pc->id,
+                            ],
+                            // ถ้ามีข้อมูลอยู่แล้วให้ทำการอัปเดทข้อมูลนี้
+                            [
+                                'type_store' => $pc->type_store,
+                                'type_product' => $product->type_product,
+                                'sale_total' => $sale_total_price_item, 
+                                'sale_qty' => $row['net_sale_qty_mtd'],
+                                'com' => $product->com,
+                                'type_pc' => $pc->type_pc,
+                                'day1'=> $row['day1'],
+                                'day2'=> $row['day2'],
+                                'day3'=> $row['day3'],
+                                'day4'=> $row['day4'],
+                                'day5'=> $row['day5'],
+                                'day6'=> $row['day6'],
+                                'day7'=> $row['day7'],
+                                'day8'=> $row['day8'],
+                                'day9'=> $row['day9'],
+                                'day10'=> $row['day10'],
+                                'day11'=> $row['day11'],
+                                'day12'=> $row['day12'],
+                                'day13'=> $row['day13'],
+                                'day14'=> $row['day14'],
+                                'day15'=> $row['day15'],
+                                'day16'=> $row['day16'],
+                                'day17'=> $row['day17'],
+                                'day18'=> $row['day18'],
+                                'day19'=> $row['day19'],
+                                'day20'=> $row['day20'],
+                                'day21'=> $row['day21'],
+                                'day22'=> $row['day22'],
+                                'day23'=> $row['day23'],
+                                'day24'=> $row['day24'],
+                                'day25'=> $row['day25'],
+                                'day26'=> $row['day26'],
+                                'day27'=> $row['day27'],
+                                'day28'=> $row['day28'],
+                                'day29'=> $row['day29'],
+                                'day30'=> $row['day30'],
+                                'day31'=> $row['day31'],
+                            ]
+                        );
+                    }else if ($pc_qtys->count() > 1) {
+                    $sale_qty_per_pc = (int)(abs($row['net_sale_qty_mtd']) / $pc_qtys->count());
+                    $remaining_qty = abs($row['net_sale_qty_mtd']) - ($sale_qty_per_pc * $pc_qtys->count());
                 
-                    foreach ($pcs as $pcIndex => $pc) {
-                        $product = product::where('item_number', $row['item_number'])->first();
-                        $price = Price::where('item_number', $row['item_number'])->first();
+                    foreach ($pc_qtys as $pcIndex => $pc) {
+                        
                 
                         $day_totals = [];
                         $remaining_days_qty = [];
                         for ($day = 1; $day <= 31; $day++) {
                             $day_key = 'day' . $day;
-                            $day_totals[$day] = (int)(abs($row[$day_key]) / $pcs->count());
-                            $remaining_days_qty[$day] = (int)abs($row[$day_key]) - ($day_totals[$day] * $pcs->count());
+                            $day_totals[$day] = (int)(abs($row[$day_key]) / $pc_qtys->count());
+                            $remaining_days_qty[$day] = (int)abs($row[$day_key]) - ($day_totals[$day] * $pc_qtys->count());
                         }
                         
                         
@@ -342,29 +417,6 @@ class ImportController extends Controller
                             }
                         }
 
-
-                        // Commission::updateOrInsert(
-                        //     [
-                        //         'supplier_number' => $row['supplier_number'],
-                        //         'store_id' => $row['location_number'],
-                        //         'as_of_month' => $row['as_of_month'],
-                        //         'as_of_year' => $row['as_of_year'],
-                        //         'item_number' => $row['item_number'],
-                        //         'id_pc' => $pc->id,
-                        //     ],
-                        //     [
-                        //         'type_store' => $pc->type_store,
-                        //         'type_product' => $product->type_product,
-                        //         'sale_total' => $sale_total_price_item,
-                        //         'sale_qty' => abs(($row['net_sale_qty_mtd'] < 0 ? -1 : 1) * ($sale_qty_per_pc + ($remaining_qty > 0 && $pcIndex < $remaining_qty ? 1 : 0))),
-                        //         'com' => $product->com,
-                        //         'type_pc' => $pc->type_pc,
-                        //     ] + array_reduce(range(1, 31), function ($carry, $day) use ($day_totals, $remaining_days_qty, $pcIndex) {
-                        //         $day_key = 'day' . $day;
-                        //         $carry[$day_key] = abs(($day_totals[$day]< 0 ? -1 : 1) * ($day_totals[$day] + ($remaining_days_qty[$day] > 0 && $pcIndex < $remaining_days_qty[$day] ? 1 : 0)));
-                        //         return $carry;
-                        //     }, [])
-                        // );
                         Commission::updateOrInsert(
                             [
                                 'supplier_number' => $row['supplier_number'],
@@ -416,6 +468,7 @@ class ImportController extends Controller
                         );
                         
                     }
+                    }
                 } else {
                     // กรณีไม่มี PC พบ ให้ข้ามขั้นตอนนี้ไป
                 }
@@ -437,7 +490,10 @@ class ImportController extends Controller
                     DB::raw('SUM(CASE WHEN type_product = "AV" THEN sale_qty ELSE 0 END) as unit_av'),
 
                     DB::raw('SUM(CASE WHEN type_product = "HA" THEN sale_total ELSE 0 END) as sale_ha'),
-                    DB::raw('SUM(CASE WHEN type_product = "HA" THEN sale_qty ELSE 0 END) as unit_ha')
+                    DB::raw('SUM(CASE WHEN type_product = "HA" THEN sale_qty ELSE 0 END) as unit_ha'),
+
+                    DB::raw('SUM(CASE WHEN type_product = "AIR" THEN sale_total ELSE 0 END) as sale_air'),
+                    DB::raw('SUM(CASE WHEN type_product = "AIR" THEN sale_qty ELSE 0 END) as unit_air')
                 )
                 ->where('as_of_month', $var_month)
                 ->where('as_of_year', $var_year)
@@ -450,7 +506,8 @@ class ImportController extends Controller
                     'id_pc',
                     DB::raw('SUM(CASE WHEN type_product = "TV" THEN sale_qty * com ELSE 0 END) as normalcom_tv'),
                     DB::raw('SUM(CASE WHEN type_product = "AV" THEN sale_qty * com ELSE 0 END) as normalcom_av'),
-                    DB::raw('SUM(CASE WHEN type_product = "HA" THEN sale_qty * com ELSE 0 END) as normalcom_ha')
+                    DB::raw('SUM(CASE WHEN type_product = "HA" THEN sale_qty * com ELSE 0 END) as normalcom_ha'),
+                    DB::raw('SUM(CASE WHEN type_product = "AIR" THEN sale_qty * com ELSE 0 END) as normalcom_air')
                 )
                 ->where('as_of_month', $var_month)
                 ->where('as_of_year', $var_year)
@@ -471,9 +528,12 @@ class ImportController extends Controller
                     'unit_av' => $sale->unit_av,
                     'sale_ha' => $sale->sale_ha,
                     'unit_ha' => $sale->unit_ha,
+                    'sale_air' => $sale->sale_air,
+                    'unit_air' => $sale->unit_air,
                     'normalcom_tv' => $commission ? $commission->normalcom_tv : 0,
                     'normalcom_av' => $commission ? $commission->normalcom_av : 0,
                     'normalcom_ha' => $commission ? $commission->normalcom_ha : 0,
+                    'normalcom_air' => $commission ? $commission->normalcom_air : 0,
                     'extra_tv' => 0,
                     'extra_ha' => 0,
                 ];
@@ -495,19 +555,23 @@ class ImportController extends Controller
                             $data->com_tv = $data->normalcom_tv * ($achieve_percent / 100);
                             $data->com_av = $data->normalcom_av * ($achieve_percent / 100);
                             $data->com_ha = $data->normalcom_ha;
+                            $data->com_air = $data->normalcom_air;
                         } elseif ($data->achieve >= 70) {
                             $data->com_tv = $data->normalcom_tv;
                             $data->com_av = $data->normalcom_av;
                             $data->com_ha = $data->normalcom_ha;
+                            $data->com_air = $data->normalcom_air;
                         } elseif ($data->achieve >= 30) {
                             $data->com_tv = $data->normalcom_tv * ($data->achieve / 100);
                             $data->com_av = $data->normalcom_av * ($data->achieve / 100);
                             $data->com_ha = $data->normalcom_ha;
+                            $data->com_air = $data->normalcom_air;
                         } else {
                             $data->com_tv = 0;
                             $data->com_av = 0;
                             // $data->com_ha = 0;
                             $data->com_ha = $data->normalcom_ha;
+                            $data->com_air = $data->normalcom_air;
                         }
                         
                         switch ($pc->type_store) {
@@ -546,25 +610,34 @@ class ImportController extends Controller
                                     $data->extra_tv = 0;
                                 }
                                 break;
+                            case 'CECO':
+                                if ($data->achieve >= 120) {
+                                    $data->extra_tv = 3000;
+                                } elseif ($data->achieve >= 100) {
+                                    $data->extra_tv = 2000;
+                                } else {
+                                    $data->extra_tv = 0;
+                                }
+                                break;
                             default:
                                 $data->extra_tv = 0;
                                 break;
                         }
                         
-                        if ($data->sale_ha > 300000) {
+                        if ($data->sale_ha + $data->sale_air > 300000) {
                             $data->extra_ha = 4000;
-                        } elseif ($data->sale_ha > 200000) {
+                        } elseif ($data->sale_ha + $data->sale_air > 200000) {
                             $data->extra_ha = 3000;
-                        } elseif ($data->sale_ha > 100000) {
+                        } elseif ($data->sale_ha + $data->sale_air > 100000) {
                             $data->extra_ha = 2000;
-                        } elseif ($data->sale_ha >= 70000) {
+                        } elseif ($data->sale_ha + $data->sale_air >= 70000) {
                             $data->extra_ha = 1000;
                         } else {
                             $data->extra_ha = 0;
                         }
 
                         //Extra PC
-                        $sale_out = $data->sale_tv + $data->sale_av + $data->sale_ha;
+                        $sale_out = $data->sale_tv + $data->sale_av + $data->sale_ha + $data->sale_air;
                         if ($sale_out >= 500000) {
                             $data->extra_tv += 2000;
                         } elseif ($sale_out >= 600000) {
@@ -624,14 +697,15 @@ class ImportController extends Controller
                         $data->com_tv = $data->normalcom_tv;
                         $data->com_av = $data->normalcom_av;
                         $data->com_ha = $data->normalcom_ha;
+                        $data->com_air = $data->normalcom_air;
 
-                        if ($data->sale_ha > 300000) {
+                        if ($data->sale_ha + $data->sale_air> 300000) {
                             $data->extra_ha = 4000;
-                        } elseif ($data->sale_ha > 250000) {
+                        } elseif ($data->sale_ha + $data->sale_air > 250000) {
                             $data->extra_ha = 3500;
-                        } elseif ($data->sale_ha > 200000) {
+                        } elseif ($data->sale_ha + $data->sale_air > 200000) {
                             $data->extra_ha = 2500;
-                        } elseif ($data->sale_ha > 150000) {
+                        } elseif ($data->sale_ha + $data->sale_air > 150000) {
                             $data->extra_ha = 1000;
                         }else {
                             $data->extra_ha = 0;
@@ -642,7 +716,8 @@ class ImportController extends Controller
                         $data->com_tv = $data->sale_tv * 0.05;
                         $data->com_av = $data->sale_av * 0.05;
                         $data->com_ha = $data->sale_ha * 0.05;
-                        $sale_out = $data->sale_tv + $data->sale_av + $data->sale_ha;
+                        $data->com_air = $data->sale_air * 0.05;
+                        $sale_out = $data->sale_tv + $data->sale_av + $data->sale_ha + $data->sale_air;
                         if ($sale_out > 299999) {
                             $data->extra_tv = 6000;
                         } elseif ($sale_out > 199999) {
@@ -662,8 +737,9 @@ class ImportController extends Controller
                         $data->com_tv = $data->normalcom_tv;
                         $data->com_av = $data->normalcom_av;
                         $data->com_ha = $data->normalcom_ha;
+                        $data->com_air = $data->normalcom_air;
 
-                        $sale_out = $data->sale_tv + $data->sale_av + $data->sale_ha;
+                        $sale_out = $data->sale_tv + $data->sale_av + $data->sale_ha + $data->sale_air;
                         if ($sale_out > 250000) {
                             $data->extra_tv = 11000;
                         } elseif ($sale_out > 200000) {
@@ -682,11 +758,13 @@ class ImportController extends Controller
                         $data->com_tv = $data->normalcom_tv;
                         $data->com_av = $data->normalcom_av;
                         $data->com_ha = $data->normalcom_ha;
+                        $data->com_air = $data->normalcom_air;
                         break;
                     default:
                         $data->com_tv = 0;
                         $data->com_av = 0;
                         $data->com_ha = 0;
+                        $data->com_air = 0;
                         $data->extra_tv = 0;
                         $data->extra_ha = 0;
                         break;
@@ -697,10 +775,10 @@ class ImportController extends Controller
                 
             
                 //คำนวณ net_com และ net_pay
-                $data->pay_com = $data->com_tv + $data->com_av + $data->com_ha;
+                $data->pay_com = $data->com_tv + $data->com_av + $data->com_ha + $data->com_air;
                 $data->net_com = $data->pay_com + $data->extra_tv + $data->extra_ha;
                 $data->net_pay = $data->net_com ;
-                $sale_total = $data->sale_tv+$data->sale_av+$data->sale_ha;
+                $sale_total = $data->sale_tv+$data->sale_av+$data->sale_ha+$data->sale_air;
             
                 //คำนวณ dis_pay
                 // $data->dis_pay = $data->pay_com / $data->net_com;
@@ -727,6 +805,8 @@ class ImportController extends Controller
                     'unit_av' => $data->unit_av,
                     'sale_ha' => $data->sale_ha,
                     'unit_ha' => $data->unit_ha,
+                    'sale_air' => $data->sale_air,
+                    'unit_air' => $data->unit_air,
                     'sale_total' => $sale_total,
                     'type_pc' => $pc->type_pc,
                     'pc_salary' => $pc->salary,
@@ -735,9 +815,11 @@ class ImportController extends Controller
                     'normalcom_tv' => $data->normalcom_tv,
                     'normalcom_av' => $data->normalcom_av,
                     'normalcom_ha' => $data->normalcom_ha,
+                    'normalcom_air' => $data->normalcom_air,
                     'com_tv' => $data->com_tv,
                     'com_av' => $data->com_av,
                     'com_ha' => $data->com_ha,
+                    'com_air' => $data->com_air,
                     'extra_tv' => $data->extra_tv,
                     'extra_ha' => $data->extra_ha,
                     'pay_com' => $data->pay_com,
@@ -771,8 +853,13 @@ class ImportController extends Controller
                     ->where('as_of_month', $var_month)
                     ->where('as_of_year', $var_year)
                     ->sum('sale_ha');
+
+                $total_sale_air = main_commission::whereIn('store_id', $subStores)
+                    ->where('as_of_month', $var_month)
+                    ->where('as_of_year', $var_year)
+                    ->sum('sale_air');
                 
-                $totalSale = $total_sale_tv + $total_sale_av + $total_sale_ha;
+                $totalSale = $total_sale_tv + $total_sale_av + $total_sale_ha +  $total_sale_air;
 
                 $total_unit_tv = main_commission::whereIn('store_id', $subStores)
                     ->where('as_of_month', $var_month)
@@ -789,6 +876,11 @@ class ImportController extends Controller
                     ->where('as_of_year', $var_year)
                     ->sum('unit_ha');
                     
+                $total_unit_air = main_commission::whereIn('store_id', $subStores)
+                    ->where('as_of_month', $var_month)
+                    ->where('as_of_year', $var_year)
+                    ->sum('unit_air');
+                    
                     if ($sale->target > 0) {
                         $achieve = ($totalSale * 100) / $sale->target;
                     } else {
@@ -796,7 +888,11 @@ class ImportController extends Controller
                     }
                 // Calculate achieve and commission
                 // $achieve = ($totalSale *100) / $sale->target ;
-                $comSale = ($sale->base_com * $achieve) / 100;
+                    if($achieve >=30){
+                        $comSale = ($sale->base_com * $achieve) / 100;
+                    }else{
+                        $comSale = 0;
+                    }
 
                 // Calculate extra_sale_out based on achieve
                 $extraSaleOut = 0;
@@ -820,7 +916,7 @@ class ImportController extends Controller
                 $totalPCs = main_commission::whereIn('store_id', $subStores)
                     ->where('as_of_month', $var_month)
                     ->where('as_of_year', $var_year)
-                    ->where('type_pc', 'pc')
+                    ->whereIn('type_pc', ['pc', 'pc_ha'])
                     ->count();
 
                     if ($totalSale_pc > 0 && $totalPCs >0) {
@@ -854,6 +950,8 @@ class ImportController extends Controller
                         'unit_av' => $total_unit_av,
                         'sale_ha' => $total_sale_ha,
                         'unit_ha' => $total_unit_ha,
+                        'sale_air' => $total_sale_air,
+                        'unit_air' => $total_unit_air,
                         'sale_out' => $totalSale,
 
                         'extra_sale_out' => $extraSaleOut,
