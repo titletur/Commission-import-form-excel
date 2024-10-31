@@ -39,12 +39,12 @@ class pcController extends Controller
             'code_pc' => 'required|string',
             'name_pc' => 'nullable|string',
             'type_pc' => 'nullable|string',
-            'sale_type_product' => 'nullable|array', 
+            'sale_type_product' => 'nullable|array',
             'tarket' => 'nullable|string',
             'salary' => 'nullable|string',
             
         ]);
-
+        // dd(json_encode($request->input('sale_type_product')));
         // tb_pc::create($request->all());
         tb_pc::updateOrCreate(
             [
