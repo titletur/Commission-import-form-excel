@@ -11,9 +11,9 @@ class main_commission extends Model
     protected $table = 'tb_main_commission';
 
     protected $fillable = [
-        'store_id','type_store', 'as_of_month', 'as_of_year', 'sale_tv','sale_av','sale_ha',
-        'sale_total', 'id_pc','name_pc','type_pc','pc_salary','tarket','achieve','normalcom_tv','normalcom_av','normalcom_ha',
-        'com_tv','com_av','com_ha','unit_tv','unit_av','unit_ha'
+        'store_id','type_store', 'as_of_month', 'as_of_year', 'sale_tv','sale_av','sale_ha','sale_air',
+        'sale_total', 'id_pc','name_pc','type_pc','pc_salary','tarket','achieve','normalcom_tv','normalcom_av','normalcom_ha','normalcom_air',
+        'com_tv','com_av','com_ha','com_air','unit_tv','unit_av','unit_ha','unit_air'
         ,'pay_com','extra_tv','extra_ha','net_com','advance_pay','other','remark','net_pay','dis_pay'
     ];
 }
