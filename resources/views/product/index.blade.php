@@ -77,16 +77,11 @@
                 <tr>
                     <th>ID</th>
                     <th>Supplier</th>
-                    <th>Division</th>
-                    <th>Department</th>
-                    <th>Subdepartment</th>
-                    <th>Pro Class</th>
-                    <th>Sub Pro Class</th>
-                    <th>Barcode</th>
-                    <th>Article</th>
-                    <th>Article Name</th>
-                    {{-- <th>Brand</th> --}}
-                    <th>Model</th>
+                    <th>sub dept</th>
+                    <th>sub dept name</th>
+                    <th>product model</th>
+                    <th>skucode</th>
+                    <th>product name</th>
                     <th>Type Product</th>
                     <th>Price</th>
                     <th>Price(vat)</th>
@@ -102,17 +97,12 @@
                     <tr>
                         {{-- <td>{{ $product->id }}</td> --}}
                         <td>{{ $i++; }}</td>
-                        <td>{{ $product->suppliercode }}</td>
-                        <td>{{ $product->division }}</td>
-                        <td>{{ $product->department }}</td>
-                        <td>{{ $product->subdepartment }}</td>
-                        <td>{{ $product->pro_class }}</td>
-                        <td>{{ $product->sub_pro_class }}</td>
-                        <td>{{ $product->barcode }}</td>
-                        <td>{{ $product->article }}</td>
-                        <td>{{ $product->article_name }}</td>
-                        {{-- <td>{{ $product->brand }}</td> --}}
+                        <td>{{ $product->supplier }}</td>
+                        <td>{{ $product->sub_dept }}</td>
+                        <td>{{ $product->sub_dept_name }}</td>
                         <td>{{ $product->pro_model }}</td>
+                        <td>{{ $product->skucode }}</td>
+                        <td>{{ $product->pro_name }}</td>
                         <td>{{ $product->type_product }}</td>
                         <td>{{ $product->price }}</td>
                         <td>{{ $product->price_vat }}</td>
@@ -120,12 +110,10 @@
                         <td>
                             @if($editMode && in_array('Edit_product', $permissions))
                             <button class="btn btn-warning edit-btn" 
-                            data-id="{{ $product->id }}" data-suppliercode="{{ $product->suppliercode }}" 
-                            data-division="{{ $product->division }}" data-department="{{ $product->department }}" 
-                            data-subdepartment="{{ $product->subdepartment }}" data-pro_class="{{ $product->pro_class }}" 
-                            data-sub_pro_class="{{ $product->sub_pro_class }}" data-barcode="{{ $product->barcode }}"
-                            data-article="{{ $product->article }}" data-article_name="{{ $product->article_name }}"
-                            data-brand="{{ $product->brand }}" data-pro_model="{{ $product->pro_model }}"
+                            data-id="{{ $product->id }}" data-supplier="{{ $product->supplier }}" 
+                            data-sub_dept="{{ $product->sub_dept }}" data-sub_dept_name="{{ $product->sub_dept_name }}" 
+                            data-pro_model="{{ $product->pro_model }}" data-skucode="{{ $product->skucode }}" 
+                            data-pro_name="{{ $product->pro_name }}" 
                             data-type_product="{{ $product->type_product }}" data-price="{{ $product->price }}"
                             data-price_vat="{{ $product->price_vat }}" data-com="{{ $product->com }}">Edit</button>
                             &nbsp;
@@ -154,59 +142,36 @@
                         <div class="container-fluid">
                             <div class="row">
                                 <div class="col-md-6 mb-3">
-                                    <label for="add_supplier_code" class="form-label">Supplier</label>
-                                    <input type="text" class="form-control" id="add_supplier_code" name="supplier_code" >
+                                    <label for="add_supplier" class="form-label">Supplier</label>
+                                    <input type="text" class="form-control" id="add_supplier" name="supplier" >
                                 </div>
                                 <div class="col-md-6 mb-3">
-                                    <label for="add_division" class="form-label">Division</label>
-                                    <input type="text" class="form-control" id="add_division" name="division" >
+                                    <label for="add_sub_dept" class="form-label">Sub dept</label>
+                                    <input type="text" class="form-control" id="add_sub_dept" name="sub_dept" >
                                 </div>
                             </div>
                             <div class="row">
                                 <div class="col-md-6 mb-3">
-                                    <label for="add_department" class="form-label">Department</label>
-                                    <input type="text" class="form-control" id="add_department" name="department" >
+                                    <label for="add_sub_dept_name" class="form-label">Sub dept name</label>
+                                    <input type="text" class="form-control" id="add_sub_dept_name" name="sub_dept_name" >
                                 </div>
                                 <div class="col-md-6 mb-3">
-                                    <label for="add_subdepartment" class="form-label">Subdepartment</label>
-                                    <input type="text" class="form-control" id="add_subdepartment" name="subdepartment" >
+                                    <label for="add_pro_model" class="form-label">Product model</label>
+                                    <input type="text" class="form-control" id="add_pro_model" name="pro_model" >
                                 </div>
                             </div>
                             <div class="row">
                                 <div class="col-md-6 mb-3">
-                                    <label for="add_pro_class" class="form-label">Pro Class</label>
-                                    <input type="text" class="form-control" id="add_pro_class" name="pro_class" >
+                                    <label for="add_skucode" class="form-label">skucode</label>
+                                    <input type="text" class="form-control" id="add_skucode" name="skucode" >
                                 </div>
                                 <div class="col-md-6 mb-3">
-                                    <label for="add_sub_pro_class" class="form-label">Sub Pro Class</label>
-                                    <input type="text" class="form-control" id="add_sub_pro_class" name="sub_pro_class" >
+                                    <label for="add_pro_name" class="form-label">Product name</label>
+                                    <input type="text" class="form-control" id="add_pro_name" name="pro_name" >
                                 </div>
                             </div>
+                            
                             <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label for="add_barcode" class="form-label">Barcode</label>
-                                    <input type="text" class="form-control" id="add_barcode" name="barcode" >
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label for="add_article" class="form-label">Article</label>
-                                    <input type="text" class="form-control" id="add_article" name="article" >
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label for="add_article_name" class="form-label">Article Name</label>
-                                    <input type="text" class="form-control" id="add_article_name" name="article_name" >
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label for="add_brand" class="form-label">Brand</label>
-                                    <input type="text" class="form-control" id="add_brand" name="brand" >
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label for="add_pro_model" class="form-label">Model</label>
-                                    <input type="text" class="form-control" id="add_pro_model" name="pro_model" required>
-                                </div>
                                 <div class="col-md-6 mb-3">
                                     <label for="add_type_product" class="form-label">Type Product</label>
                                     {{-- <input type="text" class="form-control" id="add_type_product" name="type_product" required> --}}
@@ -262,59 +227,35 @@
                         <div class="container-fluid">
                             <div class="row">
                                 <div class="col-md-6 mb-3">
-                                    <label for="supplier_code" class="form-label">Supplier</label>
-                                    <input type="text" class="form-control" id="supplier_code" name="supplier_code" >
+                                    <label for="supplier" class="form-label">Supplier</label>
+                                    <input type="text" class="form-control" id="supplier" name="supplier" >
                                 </div>
                                 <div class="col-md-6 mb-3">
-                                    <label for="division" class="form-label">Division</label>
-                                    <input type="text" class="form-control" id="division" name="division" >
+                                    <label for="sub_dept" class="form-label">Sub dept</label>
+                                    <input type="text" class="form-control" id="sub_dept" name="sub_dept" >
                                 </div>
                             </div>
                             <div class="row">
                                 <div class="col-md-6 mb-3">
-                                    <label for="department" class="form-label">Department</label>
-                                    <input type="text" class="form-control" id="department" name="department" >
+                                    <label for="sub_dept_name" class="form-label">Sub dept name</label>
+                                    <input type="text" class="form-control" id="sub_dept_name" name="sub_dept_name" >
                                 </div>
                                 <div class="col-md-6 mb-3">
-                                    <label for="subdepartment" class="form-label">Subdepartment</label>
-                                    <input type="text" class="form-control" id="subdepartment" name="subdepartment" >
+                                    <label for="pro_model" class="form-label">Product model</label>
+                                    <input type="text" class="form-control" id="pro_model" name="pro_model" >
                                 </div>
                             </div>
                             <div class="row">
                                 <div class="col-md-6 mb-3">
-                                    <label for="pro_class" class="form-label">Pro Class</label>
-                                    <input type="text" class="form-control" id="pro_class" name="pro_class" >
+                                    <label for="skucode" class="form-label">skucode</label>
+                                    <input type="text" class="form-control" id="skucode" name="skucode" >
                                 </div>
                                 <div class="col-md-6 mb-3">
-                                    <label for="sub_pro_class" class="form-label">Sub Pro Class</label>
-                                    <input type="text" class="form-control" id="sub_pro_class" name="sub_pro_class" >
+                                    <label for="pro_name" class="form-label">Product name</label>
+                                    <input type="text" class="form-control" id="pro_name" name="pro_name" >
                                 </div>
                             </div>
                             <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label for="barcode" class="form-label">Barcode</label>
-                                    <input type="text" class="form-control" id="barcode" name="barcode" >
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label for="article" class="form-label">Article</label>
-                                    <input type="text" class="form-control" id="article" name="article" >
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label for="article_name" class="form-label">Article Name</label>
-                                    <input type="text" class="form-control" id="article_name" name="article_name" >
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label for="brand" class="form-label">Brand</label>
-                                    <input type="text" class="form-control" id="brand" name="brand" >
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label for="pro_model" class="form-label">Model</label>
-                                    <input type="text" class="form-control" id="pro_model" name="pro_model" required>
-                                </div>
                                 <div class="col-md-6 mb-3">
                                     <label for="type_product" class="form-label">Type Product</label>
                                     {{-- <input type="text" class="form-control" id="type_product" name="type_product" required> --}}
@@ -392,34 +333,23 @@
             // Edit button click event
             $('.edit-btn').on('click', function() {
                 var id = $(this).data('id');
-                var suppliercode = $(this).data('suppliercode');
-                var division = $(this).data('division');
-                var department = $(this).data('department');
-                var subdepartment = $(this).data('subdepartment');
-                var pro_class = $(this).data('pro_class');
-                var sub_pro_class = $(this).data('sub_pro_class');
-                var barcode = $(this).data('barcode');
-                var article = $(this).data('article');
-                var article_name = $(this).data('article_name');
-                var brand = $(this).data('brand');
+                var supplier = $(this).data('supplier');
+                var sub_dept = $(this).data('sub_dept');
+                var sub_dept_name = $(this).data('sub_dept_name');
                 var pro_model = $(this).data('pro_model');
+                var skucode = $(this).data('skucode');
+                var pro_name = $(this).data('pro_name');
                 var type_product = $(this).data('type_product');
                 var price = $(this).data('price');
                 var price_vat = $(this).data('price_vat');
                 var com = $(this).data('com');
 
-                $('#supplier_code').val(suppliercode);
-                $('#division').val(division);
-                $('#department').val(department);
-                $('#subdepartment').val(subdepartment);
-                $('#pro_class').val(pro_class);
-                $('#sub_pro_class').val(sub_pro_class);
-                $('#barcode').val(barcode);
-
-                $('#article').val(article);
-                $('#article_name').val(article_name);
-                $('#brand').val(brand);
+                $('#supplier').val(supplier);
+                $('#sub_dept').val(sub_dept);
+                $('#sub_dept_name').val(sub_dept_name);
                 $('#pro_model').val(pro_model);
+                $('#skucode').val(skucode);
+                $('#pro_name').val(pro_name);
                 $('#type_product').val(type_product).trigger("chosen:updated");
                 $('#price').val(price);
                 $('#price_vat').val(price_vat);
