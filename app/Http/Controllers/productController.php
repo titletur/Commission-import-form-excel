@@ -37,17 +37,12 @@ class productController extends Controller
     {
         try {
         $request->validate([
-            'suppliercode' => 'nullable|string',
-            'division' => 'nullable|string',
-            'department' => 'nullable|string',
-            'subdepartment' => 'nullable|string',
-            'pro_class' => 'nullable|string',
-            'sub_pro_class' => 'nullable|string',
-            'barcode' => 'nullable|string',
-            'article' => 'nullable|string',
-            'article_name' => 'nullable|string',
-            'brand' => 'nullable|string',
-            'pro_model' => 'required|string',
+            'supplier' => 'nullable|string',
+            'sub_dept' => 'nullable|string',
+            'sub_dept_name' => 'nullable|string',
+            'pro_model' => 'nullable|string',
+            'skucode' => 'nullable|string',
+            'pro_name' => 'nullable|string',
             'type_product' => 'nullable|string',
             'price' => 'nullable|string',
             'price_vat' => 'nullable|string',
@@ -69,23 +64,19 @@ class productController extends Controller
     public function update(Request $request, $id)
     {
         try {
-        $request->validate([
-            'suppliercode' => 'nullable|string',
-            'division' => 'nullable|string',
-            'department' => 'nullable|string',
-            'subdepartment' => 'nullable|string',
-            'pro_class' => 'nullable|string',
-            'sub_pro_class' => 'nullable|string',
-            'barcode' => 'nullable|string',
-            'article' => 'nullable|string',
-            'article_name' => 'nullable|string',
-            'brand' => 'nullable|string',
-            'pro_model' => 'required|string',
-            'type_product' => 'nullable|string',
-            'price' => 'nullable|string',
-            'price_vat' => 'nullable|string',
-            'com' => 'nullable|string',
-        ]);
+            $request->validate([
+                'supplier' => 'nullable|string',
+                'sub_dept' => 'nullable|string',
+                'sub_dept_name' => 'nullable|string',
+                'pro_model' => 'nullable|string',
+                'skucode' => 'nullable|string',
+                'pro_name' => 'nullable|string',
+                'type_product' => 'nullable|string',
+                'price' => 'nullable|string',
+                'price_vat' => 'nullable|string',
+                'com' => 'nullable|string',
+                
+            ]);
     
         $product = product::findOrFail($id);
         $product->update($request->all());
