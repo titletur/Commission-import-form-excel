@@ -13,81 +13,54 @@
             <table id="data-table" class="table table-bordered">
                 <thead>
                     <tr>
-                        <th>Report Code</th>
-                        <th>Supplier Code</th>
-                        <th>Business Format</th>
-                        <th>Compare</th>
-                        <th>Store ID</th>
-                        <th>Store</th>
-                        <th>As of Month</th>
-                        <th>As of Year</th>
-                        <th>Last Year Compare Month</th>
-                        <th>Report Date</th>
-                        <th>Division</th>
-                        <th>Department</th>
-                        <th>Subdepartment</th>
-                        <th>Pro Class</th>
-                        <th>Sub Pro Class</th>
-                        <th>Barcode</th>
-                        <th>Article</th>
-                        <th>Article Name</th>
-                        <th>Brand</th>
-                        <th>Pro Model</th>
-                        <th>Sale Amt TY</th>
-                        <th>Sale Amt LY</th>
-                        <th>Sale Amt Var</th>
-                        <th>Sale Qty TY</th>
-                        <th>Sale Qty LY</th>
-                        <th>Sale Qty Var</th>
-                        <th>Stock TY</th>
-                        <th>Stock LY</th>
-                        <th>Stock Var</th>
-                        <th>Stock Qty TY</th>
-                        <th>Stock Qty LY</th>
-                        <th>Stock Qty Var</th>
-                        <th>Day on Hand TY</th>
-                        <th>Day on Hand LY</th>
-                        <th>Day on Hand Diff</th>
+                        <th>supplier</th>
+                        <th>tdate</th>
+                        <th>as_of_month</th>
+                        <th>as_of_year</th>
+                        <th>sub_dept</th>
+                        <th>sub_dept_name</th>
+                        <th>store_id</th>
+                        <th>store</th>
+                        <th>skucode</th>
+                        <th>pro_model</th>
+                        <th>pro_name</th>
+                        <th>item_status</th>
+                        <th>atb_code</th>
+                        <th>distributemethod</th>
+                        <th>amount</th>
+                        <th>dcavail</th>
+                        <th>stock</th>
+                        <th>poondalivery</th>
+                        <th>toondalivery</th>
+                        <th>sale_qty</th>
+                        <th>sale_amount</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach ($data as $index => $row)
                         <tr>
-                            <td>{{ $row['report_code'] }}</td>
-                            <td>{{ $row['suppliercode'] }}</td>
-                            <td>{{ $row['business_format'] }}</td>
-                            <td>{{ $row['compare'] }}</td>
-                            <td>{{ $row['store_id'] }}</td>
-                            <td>{{ $row['store'] }}</td>
+                            <td>{{ $row['supplier'] }}</td>
+                            <td>{{ $row['tdate'] }}</td>
                             <td>{{ $row['as_of_month'] }}</td>
                             <td>{{ $row['as_of_year'] }}</td>
-                            <td>{{ $row['last_year_compare_month'] }}</td>
-                            <td>{{ $row['report_date'] }}</td>
-                            <td>{{ $row['division'] }}</td>
-                            <td>{{ $row['department'] }}</td>
-                            <td>{{ $row['subdepartment'] }}</td>
-                            <td>{{ $row['pro_Class'] }}</td>
-                            <td>{{ $row['sub_pro_class'] }}</td>
-                            <td>{{ $row['barcode'] }}</td>
-                            <td>{{ $row['article'] }}</td>
-                            <td>{{ $row['article_name'] }}</td>
-                            <td>{{ $row['brand'] }}</td>
+                            <td>{{ $row['sub_dept'] }}</td>
+                            <td>{{ $row['sub_dept_name'] }}</td>
+                            <td>{{ $row['store_id'] }}</td>
+                            <td>{{ $row['store'] }}</td>
+                            <td>{{ $row['skucode'] }}</td>
                             <td>{{ $row['pro_model'] }}</td>
-                            <td>{{ $row['sale_amt_ty'] }}</td>
-                            <td>{{ $row['sale_amt_ly'] }}</td>
-                            <td>{{ $row['sale_amt_var'] }}</td>
-                            <td>{{ $row['sale_qty_ty'] }}</td>
-                            <td>{{ $row['sale_qty_ly'] }}</td>
-                            <td>{{ $row['sale_qty_var'] }}</td>
-                            <td>{{ $row['stock_ty'] }}</td>
-                            <td>{{ $row['stock_ly'] }}</td>
-                            <td>{{ $row['stock_var'] }}</td>
-                            <td>{{ $row['stock_qty_ty'] }}</td>
-                            <td>{{ $row['stock_qty_ly'] }}</td>
-                            <td>{{ $row['stock_qty_var'] }}</td>
-                            <td>{{ $row['day_on_hand_ty'] }}</td>
-                            <td>{{ $row['day_on_hand_ly'] }}</td>
-                            <td>{{ $row['day_on_hand_diff'] }}</td>
+                            <td>{{ $row['pro_name'] }}</td>
+                            <td>{{ $row['item_status'] }}</td>
+                            <td>{{ $row['atb_code'] }}</td>
+                            <td>{{ $row['distributemethod'] }}</td>
+                            <td>{{ $row['amount'] }}</td>
+                            <td>{{ $row['dcavail'] }}</td>
+                            <td>{{ $row['stock'] }}</td>
+                            <td>{{ $row['poondalivery'] }}</td>
+                            <td>{{ $row['toondalivery'] }}</td>
+                            <td>{{ $row['sale_qty'] }}</td>
+                            <td>{{ $row['sale_amount'] }}</td>
+                            
                         </tr>
                     @endforeach
                 </tbody>
