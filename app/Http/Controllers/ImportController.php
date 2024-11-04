@@ -45,70 +45,40 @@ class ImportController extends Controller
         foreach ($spreadsheet->getAllSheets() as $sheet) {
                 $sheetData = $sheet->toArray(null, true, true, true);
         foreach ($sheetData as $key => $row) {
-            if ($key > 0) {
-            if ($row['V'] != '0' && $row['V'] != "Sale Qty TY"){
+            if ($key > 1) {
+            if ($row['R'] != '0' && $row['R'] != "SALEMONTHQTY" && $row['R'] != ""){
                 
             // แปลงข้อมูลจากฟอร์แมต 'M-y' เช่น 'Jun-24' ให้เป็นเดือนและปี
-            // $as_of_month_year = \DateTime::createFromFormat('M-y', $row['F']);
+            // $as_of_month_year = \DateTime::createFromFormat('Y-m', $row['B']);
             // $as_of_month = $as_of_month_year ? $as_of_month_year->format('m') : null;
             // $as_of_year = $as_of_month_year ? $as_of_month_year->format('Y') : null;
-
-            $as_of_month_year = $row['F']; 
-            $clean_date_f = substr($as_of_month_year, 2);
-            // แปลงรูปแบบวันที่
-            $date_object_f = \DateTime::createFromFormat('M-y', $clean_date_f);
-            $as_of_month = $date_object_f ? $date_object_f->format('m') : null;
-            $as_of_year = $date_object_f ? $date_object_f->format('Y') : null;
-
-            $last_year_compare_month = $row['G']; 
-            $clean_date_g = substr($last_year_compare_month, 2);
-            // แปลงรูปแบบวันที่
-            $date_object_g = \DateTime::createFromFormat('M-y', $clean_date_g);
-            $formatted_last_year_compare_month = $date_object_g ? $date_object_g->format('Y-m') . '-01' : null;
-
-            $report_date = $row['H']; 
-            $clean_date_h = substr($report_date, 2);
-            $date_object_h = \DateTime::createFromFormat('d-M-y', $clean_date_h);
-            $formatted_report_date = $date_object_h ? $date_object_h->format('Y-m-d') : null;
+            list($as_of_year, $as_of_month) = explode('-', $row['B']);
+                // dd($as_of_month,$as_of_year );
+            
 
             if ($as_of_month == $var_month && $as_of_year == $var_year) {
             $data[] = [
-                'report_code' => $row['A'],
-                'suppliercode' => substr($row['B'],0,7),
-                'suppliername' => $row['B'],
-                'business_format' => $row['C'],
-                'compare' => $row['D'],
-                'store_id' => substr($row['E'],0,5),
-                'store' => $row['E'],
-                'as_of_month' => $as_of_month,
-                'as_of_year' => $as_of_year,
-                'last_year_compare_month' => $formatted_last_year_compare_month,
-                'report_date' => $formatted_report_date,
-                'division' => $row['I'],
-                'department' => $row['J'],
-                'subdepartment' => $row['K'],
-                'pro_Class' => $row['L'],
-                'sub_pro_class' => $row['M'],
-                'barcode' => $row['N'],
-                'article' => $row['O'],
-                'article_name' => $row['P'],
-                'brand' => $row['Q'],
-                'pro_model' => $row['R'],
-                'sale_amt_ty' => $row['S'],
-                'sale_amt_ly' => $row['T'],
-                'sale_amt_var' => $row['U'],
-                'sale_qty_ty' => $row['V'],
-                'sale_qty_ly' => $row['W'],
-                'sale_qty_var' => $row['X'],
-                'stock_ty' => $row['Y'],
-                'stock_ly' => $row['Z'],
-                'stock_var' => $row['AA'],
-                'stock_qty_ty' => $row['AB'],
-                'stock_qty_ly' => $row['AC'],
-                'stock_qty_var' => $row['AD'],
-                'day_on_hand_ty' => $row['AE'],
-                'day_on_hand_ly' => $row['AF'],
-                'day_on_hand_diff' => $row['AG'],
+                'supplier'=> $row['A'],
+                'tdate'=> $row['B'],
+                'as_of_month'=> $as_of_month,
+                'as_of_year'=> $as_of_year,
+                'sub_dept'=> $row['C'],
+                'sub_dept_name'=> $row['D'],
+                'store_id'=> $row['E'],
+                'store'=> $row['F'],
+                'skucode'=> $row['G'],
+                'pro_model'=> $row['H'],
+                'pro_name'=> $row['I'],
+                'item_status'=> $row['J'],
+                'atb_code'=> $row['K'],
+                'distributemethod'=> $row['L'],
+                'amount'=> $row['M'],
+                'dcavail'=> $row['N'],
+                'stock'=> $row['O'],
+                'poondalivery'=> $row['P'],
+                'toondalivery'=> $row['Q'],
+                'sale_qty'=> $row['R'],
+                'sale_amount'=> $row['S'],
             ];
             }
             }
@@ -145,71 +115,40 @@ class ImportController extends Controller
         if (is_array($data)) {
             foreach ($data as $key => $row) {
                 
-                $price_amt_vat = ($row['sale_amt_ty']*1.07);
-                // $price = $row['sale_amt_ty']/$row['sale_qty_ty'];
-                // $price_vat = ($row['sale_amt_ty']*1.07)/$row['sale_qty_ty'];
-                $price = abs($row['sale_amt_ty']) / abs($row['sale_qty_ty']);
-                $price_vat = abs(($row['sale_amt_ty'] * 1.07)) / abs($row['sale_qty_ty']);
+                $sale_price = abs($row['sale_amount']) / abs($row['sale_qty']);
+                $price_vat = $sale_price * 1.07;
 
-
-                if($row['suppliercode'] == '4400215'){
-                    $type_product = "AV";
-                }else if($row['suppliercode'] == '7001389'){
-                    $type_product = "HA";
-                }else{
-                    $type_product = "TV";
-                }
-                // if($row['pro_model'] ='AN-FR5250S' && $row['store_id'] =='11129'){
-                // dd($data);
-                // }
                 Transaction::create([
-                'report_code' => $row['report_code'],
-                'suppliercode' => $row['suppliercode'],
-                'suppliername' => $row['suppliername'],
-                'business_format' => $row['business_format'],
-                'compare' => $row['compare'],
-                'store_id' => $row['store_id'],
-                'store' => $row['store'],
-                'as_of_month' => $row['as_of_month'],
-                'as_of_year' => $row['as_of_year'],
-                'last_year_compare_month' => $row['last_year_compare_month'],
-                'report_date' => $row['report_date'],
-                'division' => $row['division'],
-                'department' => $row['department'],
-                'subdepartment' => $row['subdepartment'],
-                'pro_Class' => $row['pro_Class'],
-                'sub_pro_class' => $row['sub_pro_class'],
-                'barcode' => $row['barcode'],
-                'article' => $row['article'],
-                'article_name' => $row['article_name'],
-                'brand' => $row['brand'],
-                'pro_model' => $row['pro_model'],
-                'type_product'=> $type_product,
-                'sale_amt_ty' => $row['sale_amt_ty'],
-                'sale_amt_ty_vat' => $price_amt_vat,
-                'sale_price' => $price,
-                'sale_price_vat' => $price_vat,
-                'sale_amt_ly' => $row['sale_amt_ly'],
-                'sale_amt_var' => $row['sale_amt_var'],
-                'sale_qty_ty' => $row['sale_qty_ty'],
-                'sale_qty_ly' => $row['sale_qty_ly'],
-                'sale_qty_var' => $row['sale_qty_var'],
-                'stock_ty' => $row['stock_ty'],
-                'stock_ly' => $row['stock_ly'],
-                'stock_var' => $row['stock_var'],
-                'stock_qty_ty' => $row['stock_qty_ty'],
-                'stock_qty_ly' => $row['stock_qty_ly'],
-                'stock_qty_var' => $row['stock_qty_var'],
-                'day_on_hand_ty' => $row['day_on_hand_ty'],
-                'day_on_hand_ly' => $row['day_on_hand_ly'],
-                'day_on_hand_diff' => $row['day_on_hand_diff'],
+                'supplier'=> $row['supplier'],
+                'tdate'=> $row['tdate'],
+                'as_of_month'=> $var_month,
+                'as_of_year'=> $var_year,
+                'sub_dept'=> $row['sub_dept'],
+                'sub_dept_name'=> $row['sub_dept_name'],
+                'store_id'=> $row['store_id'],
+                'store'=> $row['store'],
+                'skucode'=> $row['skucode'],
+                'pro_model'=> $row['pro_model'],
+                'pro_name'=> $row['pro_name'],
+                'item_status'=> $row['item_status'],
+                'atb_code'=> $row['atb_code'],
+                'distributemethod'=> $row['distributemethod'],
+                'amount'=> $row['amount'],
+                'dcavail'=> $row['dcavail'],
+                'stock'=> $row['stock'],
+                'poondalivery'=> $row['poondalivery'],
+                'toondalivery'=> $row['toondalivery'],
+                'sale_qty'=> is_numeric($row['sale_qty']) ? $row['sale_qty']: 0,
+                'sale_price' => $sale_price ,
+                'sale_amount'=> $row['sale_amount'],
+
                 ]);
                 //อัปเดทข้อมูล Store
-                
+
                 $storeData = [
-                    'suppliercode' => $row['suppliercode'],
+                    'suppliercode' => $row['supplier'],
                     'store' => $row['store'],
-                    // 'type_store' =>'A'
+                    // 'type_store' => 'A',
                 ];
 
                 tb_store::updateOrCreate(
@@ -220,19 +159,12 @@ class ImportController extends Controller
                 
                 
                 $productData = [
-                    'suppliercode' => $row['suppliercode'],
-                    'division' => $row['division'],
-                    'department' => $row['department'],
-                    'subdepartment' => $row['subdepartment'],
-                    'pro_Class' => $row['pro_Class'],
-                    'sub_pro_class' => $row['sub_pro_class'],
-                    'barcode' => $row['barcode'],
-                    'article' => $row['article'],
-                    'article_name' => $row['article_name'],
-                    'brand' => $row['brand'],
-                    'pro_model' => $row['pro_model'],
-                    'type_product' => $type_product,
-                    'price' => $price,
+                    'supplier' => $row['supplier'],
+                    'sub_dept' => $row['sub_dept'],
+                    'sub_dept_name' => $row['sub_dept_name'],
+                    'skucode' => $row['skucode'],
+                    'pro_name' => $row['pro_name'],
+                    'price' => $sale_price,
                     'price_vat' => $price_vat,
                     // 'com' => 0
                 ];
@@ -247,94 +179,58 @@ class ImportController extends Controller
                 $pcs = tb_pc::whereNull('status_pc')
                     ->where('store_id', $row['store_id'])
                     ->get();
-
+                
+                $product = product::where('pro_model', $row['pro_model'])->first();
 
                 // Calculate and Insert into tb_commission
                 if ($pcs->count() == 1) {
                     $pc = $pcs->first();
-                    $com = $this->calculateCom($row['pro_model']); // Assume this is a method for calculating commission
+                    $product = product::where('pro_model', $row['pro_model'])->first();
 
-                    // Commission::create([
-                    //     'suppliercode' => $row['suppliercode'],
-                    //     'store_id' => $row['store_id'],
-                    //     'type_store' => $pc->type_store,
-                    //     'as_of_month' => $row['as_of_month'],
-                    //     'as_of_year' => $row['as_of_year'],
-                    //     'pro_model' => $row['pro_model'],
-                    //     'type_product' => $type_product,
-                    //     'sale_amt' => $row['sale_amt_ty']/$row['sale_qty_ty'],
-                    //     'sale_amt_vat' => ($row['sale_amt_ty'] * 1.07)/$row['sale_qty_ty'], // Example VAT calculation
-                    //     'sale_total' => $row['sale_amt_ty'],
-                    //     'sale_total_vat' => $row['sale_amt_ty'] * 1.07,
-                    //     'sale_qty' => $row['sale_qty_ty'],
-                    //     'com' => $com,
-                    //     'id_pc' => $pc->id,
-                    //     'type_pc' => $pc->type_pc
-                    // ]);
                     Commission::updateOrInsert(
                         // เงื่อนไขในการเช็คว่ามีข้อมูลอยู่แล้วหรือไม่
                         [
-                            'suppliercode' => $row['suppliercode'],
+                            'suppliercode' => $row['supplier'],
                             'store_id' => $row['store_id'],
-                            'as_of_month' => $row['as_of_month'],
-                            'as_of_year' => $row['as_of_year'],
+                            'as_of_month' => $var_month,
+                            'as_of_year' => $var_year,
                             'pro_model' => $row['pro_model'],
                             'id_pc' => $pc->id,
                         ],
-                        // ถ้ามีข้อมูลอยู่แล้วให้ทำการอัปเดทข้อมูลนี้
                         [
                             'type_store' => $pc->type_store,
-                            'type_product' => $type_product,
-                            'sale_amt' => ($row['sale_amt_ty'] < 0 ? -1 : 1) * (abs($row['sale_amt_ty']) / abs($row['sale_qty_ty'])),
-                            'sale_amt_vat' => ($row['sale_amt_ty'] < 0 ? -1 : 1) * ((abs($row['sale_amt_ty']) * 1.07) / abs($row['sale_qty_ty'])), // การคำนวณ VAT
-                            'sale_qty' => $row['sale_qty_ty'],
-                            'com' => $com,
+                            'type_product' => $product->type_product,
+                            'sale_amt' => $sale_price,
+                            'sale_amt_vat' => $price_vat, 
+                            'sale_qty' => $row['sale_qty'],
+                            'com' => $product->com,
                             'type_pc' => $pc->type_pc,
                         ]
                     );
                 } else if ($pcs->count() > 1) {
-                    $sale_qty_per_pc = (int)(abs($row['sale_qty_ty']) / $pcs->count());
-                    $remaining_qty = abs($row['sale_qty_ty']) - (abs($sale_qty_per_pc) * $pcs->count());
+                    $sale_qty_per_pc = (int)(abs($row['sale_qty']) / $pcs->count());
+                    $remaining_qty = abs($row['sale_qty']) - (abs($sale_qty_per_pc) * $pcs->count());
+                    $product = product::where('pro_model', $row['pro_model'])->first();
 
                     foreach ($pcs as $pc) {
-                        $com = $this->calculateCom($row['pro_model']); // Calculate commission
-
-                        // Commission::create([
-                        //     'suppliercode' => $row['suppliercode'],
-                        //     'store_id' => $row['store_id'],
-                        //     'type_store' => $pc->type_store,
-                        //     'as_of_month' => $row['as_of_month'],
-                        //     'as_of_year' => $row['as_of_year'],
-                        //     'pro_model' => $row['pro_model'],
-                        //     'type_product' => $type_product,
-                        //     'sale_amt' => $row['sale_amt_ty'],
-                        //     'sale_amt_vat' => $row['sale_amt_ty'] * 1.07,
-                        //     'sale_total' => $sale_qty_per_pc * $row['sale_amt_ty'],
-                        //     'sale_total_vat' => $sale_qty_per_pc * $row['sale_amt_ty'] * 1.07,
-                        //     'sale_qty' => $sale_qty_per_pc + ($remaining_qty > 0 ? 1 : 0),
-                        //     'com' => $com,
-                        //     'id_pc' => $pc->id,
-                        //     'type_pc' => $pc->type_pc
-                        // ]);
 
                         Commission::updateOrInsert(
                             [
-                                'suppliercode' => $row['suppliercode'],
+                                'suppliercode' => $row['supplier'],
                                 'store_id' => $row['store_id'],
-                                'as_of_month' => $row['as_of_month'],
-                                'as_of_year' => $row['as_of_year'],
+                                'as_of_month' => $var_month,
+                                'as_of_year' => $var_year,
                                 'pro_model' => $row['pro_model'],
                                 'id_pc' => $pc->id,
                             ],
                             [
                                 'type_store' => $pc->type_store,
-                                'type_product' => $type_product,
-                                'sale_amt' => ($row['sale_amt_ty'] < 0 ? -1 : 1) * (abs($row['sale_amt_ty']) / abs($row['sale_qty_ty'])),
-                                'sale_amt_vat' => ($row['sale_amt_ty'] < 0 ? -1 : 1) * ((abs($row['sale_amt_ty']) * 1.07) / abs($row['sale_qty_ty'])), 
-                                // 'sale_qty' => $sale_qty_per_pc + ($remaining_qty > 0 ? 1 : 0),
-                                'sale_qty' => ($row['sale_qty_ty'] < 0 ? -1 : 1) * ($sale_qty_per_pc + ($remaining_qty > 0 ? 1 : 0)),
+                                'type_product' => $product->type_product,
+                                'sale_amt' => $sale_price,
+                                'sale_amt_vat' => $price_vat, 
+                                'sale_qty' => ($row['sale_qty'] < 0 ? -1 : 1) * ($sale_qty_per_pc + ($remaining_qty > 0 ? 1 : 0)),
 
-                                'com' => $com,
+                                'com' => $product->com,
                                 'type_pc' => $pc->type_pc,
                             ]
                         );
@@ -349,12 +245,7 @@ class ImportController extends Controller
             }   
 
 
-                ///////////Funtion cal commissiom/////////////
-            
-            // $as_of_month = $var_month; 
-            // $as_of_year = $var_year; 
 
-            // Query ข้อมูล sale_tv, unit_tv, sale_av, unit_av, sale_ha, unit_ha
             $salesData = DB::table('tb_commission')
                 ->select(
                     'store_id',
@@ -431,7 +322,7 @@ class ImportController extends Controller
                             $data->com_tv = $data->normalcom_tv * ($achieve_percent / 100);
                             $data->com_av = $data->normalcom_av * ($achieve_percent / 100);
                             $data->com_ha = $data->normalcom_ha;
-                        } elseif ($data->achieve >= 70) {
+                        } elseif ($data->achieve >= 50) {
                             $data->com_tv = $data->normalcom_tv;
                             $data->com_av = $data->normalcom_av;
                             $data->com_ha = $data->normalcom_ha;
@@ -560,6 +451,30 @@ class ImportController extends Controller
                         } elseif ($sale_out >= 70000) {
                             $data->extra_tv = 2000;
                         } else {
+                            $data->extra_tv = 0;
+                        }
+                        break;
+
+                    case 'promoter':
+                        $data->achieve = (($data->sale_tv + $data->sale_av + $data->sale_ha) * 100) / $pc->tarket;
+
+                        if ($data->achieve >= 101) {
+                            $achieve_percent = min($data->achieve, 120);
+                            $data->com_tv = $data->normalcom_tv * ($achieve_percent / 100);
+                            $data->com_av = $data->normalcom_av * ($achieve_percent / 100);
+                            $data->com_ha = $data->normalcom_ha;
+                        } else{
+                            $data->com_tv = $data->normalcom_tv;
+                            $data->com_av = $data->normalcom_av;
+                            $data->com_ha = $data->normalcom_ha;
+                        }
+
+                         $sale_out = $data->sale_tv + $data->sale_av + $data->sale_ha;
+                        if ($sale_out > 240000) {
+                            $data->extra_tv = 2000;
+                        } elseif ($sale_out > 200000) {
+                            $data->extra_tv = 1000;
+                        } else{
                             $data->extra_tv = 0;
                         }
                         break;
