@@ -5,7 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
-        <title>Commission Bigc</title>
+        <title>Commission Power Buy</title>
 
         <!-- Fonts -->
         <link rel="icon" href="{{ asset('bigc.jpg') }}" type="image/x-icon">
@@ -19,7 +19,7 @@
         <div class="min-h-screen flex flex-col sm:justify-center items-center pt-6 sm:pt-0 bg-gray-100">
             <div>
                 <a href="/">
-                    <img src="{{ asset('logo.png') }}" alt="BigC Logo">
+                    <img src="{{ asset('logo.png') }}" alt="Power Buy Logo">
                 </a>
             </div>
 
