@@ -4,7 +4,7 @@
 
     <div style="display: flex; align-items: center;">
         <img src="{{ asset('bigc.jpg') }}" alt="Big-c" width="50" style="border-radius: 15%; margin-right: 10px;">
-        <span style="font-size: 1.5rem;">Commission Big-C SIGN IN</span>
+        <span style="font-size: 1.4rem;">Commission Power Buy SIGN IN</span>
     </div>
     <br>
 
